@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+venv/
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Environment variables
+.env
+.env.local
+.env*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large files (>100MB)
+*.zip
+*.tar.gz
+*.rar
+
+# Specific large files found in this project
+aiva-nextjs/node_modules/@next/swc-darwin-arm64/next-swc.darwin-arm64.node
+my-app/node_modules/@next/swc-darwin-arm64/next-swc.darwin-arm64.node
+
+# Database files
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

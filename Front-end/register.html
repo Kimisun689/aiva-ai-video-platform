@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register - AI Video Platform</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            width: 100vw;
+            background: url('https://vcg03.cfp.cn/creative/vcg/800/new/VCG211469741377.gif') center center/cover no-repeat fixed;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            font-family: 'Poppins', 'Microsoft YaHei', sans-serif;
+        }
+        .register-container {
+            background: rgba(255,255,255,0.97);
+            border-radius: 18px 0 0 18px;
+            box-shadow: 0 8px 32px rgba(67,97,238,0.12);
+            padding: 48px 40px 40px 40px;
+            width: 100%;
+            max-width: 400px;
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.8s;
+            margin-right: 6vw;
+            position: relative;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(60px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .register-container h2 {
+            margin-bottom: 18px;
+            color: #3f37c9;
+            font-weight: 700;
+            font-size: 2rem;
+            letter-spacing: 1px;
+        }
+        .register-container form {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .input-group {
+            margin-bottom: 18px;
+            position: relative;
+        }
+        .input-group input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px 44px 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: #f8f9fa;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .input-group input:focus {
+            border: 1.5px solid #4361ee;
+            background: #fff;
+        }
+        .input-group .fa {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #bdbdbd;
+            font-size: 1.1rem;
+        }
+        .input-group .get-code-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #4361ee;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 14px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .input-group .get-code-btn:disabled {
+            background: #bdbdbd;
+            cursor: not-allowed;
+        }
+        .register-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(90deg, #4361ee 0%, #3f37c9 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            box-shadow: 0 2px 8px rgba(67,97,238,0.10);
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        .register-btn:hover {
+            background: linear-gradient(90deg, #3f37c9 0%, #4361ee 100%);
+            box-shadow: 0 4px 16px rgba(67,97,238,0.18);
+        }
+        .register-container .login-link {
+            margin-top: 18px;
+            color: #888;
+            font-size: 0.98rem;
+            text-align: center;
+        }
+        .register-container .login-link a {
+            color: #4361ee;
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: 4px;
+            transition: color 0.2s;
+        }
+        .register-container .login-link a:hover {
+            color: #e47d1d;
+        }
+        @media (max-width: 700px) {
+            body {
+                justify-content: center;
+            }
+            .register-container {
+                border-radius: 18px;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <h2>Register</h2>
+        <form id="register-form" autocomplete="off">
+            <div class="input-group">
+                <input type="email" id="email" placeholder="Email" required>
+                <i class="fa fa-envelope"></i>
+                <button type="button" class="get-code-btn" id="getCodeBtn">Get Code</button>
+            </div>
+            <div class="input-group">
+                <input type="text" id="code" placeholder="Verification Code" required>
+                <i class="fa fa-key"></i>
+            </div>
+            <div class="input-group">
+                <input type="text" id="username" placeholder="Username" required>
+                <i class="fa fa-user"></i>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" placeholder="Password" required>
+                <i class="fa fa-lock"></i>
+            </div>
+            <button type="submit" class="register-btn">Register</button>
+        </form>
+        <div class="login-link">
+            Already have an account?
+            <a href="login.html">Login</a>
+        </div>
+    </div>
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        // 验证码倒计时逻辑
+        const getCodeBtn = document.getElementById('getCodeBtn');
+        let timer = null;
+        getCodeBtn.addEventListener('click', function() {
+            const email = document.getElementById('email').value.trim();
+            if (!email) {
+                alert('Please enter your email.');
+                return;
+            }
+            fetch(`${API_BASE}/api/auth/send-code`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.success) {
+                    alert('Verification code has been sent.');
+                } else {
+                    alert('Failed to send code.');
+                }
+            })
+            .catch(() => alert('Network error sending code.'));
+
+            let count = 60;
+            getCodeBtn.disabled = true;
+            getCodeBtn.textContent = `Resend (${count}s)`;
+            timer = setInterval(() => {
+                count--;
+                if (count <= 0) {
+                    clearInterval(timer);
+                    getCodeBtn.disabled = false;
+                    getCodeBtn.textContent = 'Get Code';
+                } else {
+                    getCodeBtn.textContent = `Resend (${count}s)`;
+                }
+            }, 1000);
+        });
+
+        // 注册表单提交
+        document.getElementById('register-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const code = document.getElementById('code').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            fetch(`${API_BASE}/api/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, code, username, password })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.success && data.token) {
+                    localStorage.setItem('aiva_token', data.token);
+                    localStorage.setItem('aiva_username', username);
+                    window.location.href = 'index.html';
+                } else {
+                    alert(data.error || 'Registration failed.');
+                }
+            })
+            .catch(() => alert('Network error. Please try again.'));
+        });
+    </script>
+</body>
+</html>

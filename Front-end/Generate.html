@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIVA - AI Video Generation Platform with Digital Human</title>
+    <style>
+        :root {
+            /* Primary Colors */
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            
+            /* Background Colors */
+            --bg-primary: #0f0f23;
+            --bg-secondary: #1a1a2e;
+            --bg-card: rgba(255, 255, 255, 0.08);
+            --bg-glass: rgba(255, 255, 255, 0.1);
+            
+            /* Text Colors */
+            --text-primary: #ffffff;
+            --text-secondary: #b8b8d4;
+            --text-muted: #8b8ba7;
+            
+            /* Borders and Shadows */
+            --border-glass: rgba(255, 255, 255, 0.18);
+            --shadow-card: 0 8px 32px rgba(31, 38, 135, 0.37);
+            --shadow-hover: 0 12px 40px rgba(31, 38, 135, 0.5);
+            
+            /* Animations */
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 背景装饰 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(240, 147, 251, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(79, 172, 254, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* 动画定义 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 容器布局 */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部头部 */
+        .header {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--primary-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-item {
+            padding: 10px 20px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: var(--primary-gradient);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            flex: 1;
+        }
+
+        /* 左侧工作区 */
+        .workspace {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* 步骤指示器 */
+        .step-indicator {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 25px;
+            animation: slideInLeft 0.6s ease-out 0.2s both;
+        }
+
+        .step-indicator h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .steps-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+
+        .step-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 16px;
+            border: 3px solid var(--text-muted);
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .step.active .step-circle {
+            background: var(--primary-gradient);
+            border-color: transparent;
+            color: white;
+            transform: scale(1.1);
+            animation: pulse 2s infinite;
+        }
+
+        .step.completed .step-circle {
+            background: var(--success-gradient);
+            border-color: transparent;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .step.active .step-label,
+        .step.completed .step-label {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        /* 步骤连接线 */
+        .steps-container::before {
+            content: '';
+            position: absolute;
+            top: 25px;
+            left: 50px;
+            right: 50px;
+            height: 3px;
+            background: linear-gradient(to right, 
+                var(--text-muted) 0%, 
+                var(--text-muted) var(--progress, 0%), 
+                rgba(255,255,255,0.2) var(--progress, 0%), 
+                rgba(255,255,255,0.2) 100%);
+            z-index: 1;
+            transition: var(--transition);
+        }
+
+        /* 输入区域 */
+        .input-section {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 30px;
+            animation: slideInLeft 0.6s ease-out 0.4s both;
+        }
+
+        .input-section h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 15px 20px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 16px;
+            resize: vertical;
+            min-height: 120px;
+            transition: var(--transition);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: rgba(102, 126, 234, 0.5);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 15px 20px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .form-select:focus {
+            outline: none;
+            border-color: rgba(102, 126, 234, 0.5);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .form-actions .btn {
+            flex: 1;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-secondary {
+            background: var(--accent-gradient);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn-success {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* 右侧面板 */
+        .sidebar-right {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* 进度面板 */
+        .progress-panel {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 25px;
+            animation: slideInRight 0.6s ease-out 0.3s both;
+        }
+
+        .progress-panel h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .progress-item:last-child {
+            border-bottom: none;
+        }
+
+        .progress-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .progress-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+
+        .status-dot.pending {
+            background: var(--text-muted);
+        }
+
+        .status-dot.active {
+            background: #ffa726;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-dot.completed {
+            background: #43e97b;
+        }
+
+        .status-dot.failed {
+            background: #f5576c;
+        }
+
+        /* 结果展示区域 */
+        .results-panel {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 25px;
+            animation: slideInRight 0.6s ease-out 0.4s both;
+        }
+
+        .results-panel h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-item {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .result-content {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* 角色卡片 */
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .character-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid var(--border-glass);
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .character-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .character-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .character-role {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 视频网格 */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .video-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-glass);
+            transition: var(--transition);
+        }
+
+        .video-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 120px;
+            background: var(--primary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .video-info {
+            padding: 15px;
+        }
+
+        .video-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .video-status {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 图片网格 */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .image-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-glass);
+            transition: var(--transition);
+        }
+
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .image-thumbnail {
+            width: 100%;
+            height: 120px;
+            background: var(--secondary-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            position: relative;
+        }
+
+        .image-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+        }
+
+        .image-info {
+            padding: 15px;
+        }
+
+        .image-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .image-status {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 数字人视频网格 */
+        .digital-human-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .digital-human-card {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-glass);
+            transition: var(--transition);
+        }
+
+        .digital-human-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .digital-human-thumbnail {
+            width: 100%;
+            height: 120px;
+            background: var(--warning-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .digital-human-info {
+            padding: 15px;
+        }
+
+        .digital-human-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .digital-human-status {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .digital-human-audio {
+            font-size: 11px;
+            color: var(--text-muted);
+            background: rgba(255,255,255,0.1);
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        /* 通知系统 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: var(--transition);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: var(--success-gradient);
+        }
+
+        .notification.error {
+            background: var(--warning-gradient);
+        }
+
+        .notification.info {
+            background: var(--accent-gradient);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar-right {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .steps-container {
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+            
+            .step {
+                flex: none;
+            }
+        }
+
+        /* 隐藏和显示 */
+        .hidden {
+            display: none !important;
+        }
+
+        .fade-in {
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        /* 加载状态 */
+        .loading-skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.1) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+            border-radius: 8px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* 悬浮按钮 */
+        .floating-actions {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .floating-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary-gradient);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-hover);
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部头部 -->
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">🎬</div>
+                <div class="logo-text">AIVA</div>
+    </div>
+            <nav class="header-nav">
+                <a href="#" class="nav-item active">Generate</a>
+                <a href="#" class="nav-item">Community</a>
+                <a href="#" class="nav-item">History</a>
+                <a href="#" class="nav-item">Settings</a>
+            </nav>
+        </header>
+
+        <!-- 主要内容 -->
+    <div class="main-content">
+            <!-- 左侧工作区 -->
+            <div class="workspace">
+                <!-- 步骤指示器 -->
+                <div class="step-indicator">
+                    <h2>🎯 Creation Process</h2>
+                    <div class="steps-container">
+                        <div class="step active" data-step="1">
+                            <div class="step-circle">1</div>
+                            <div class="step-label">Creative Input</div>
+                </div>
+                        <div class="step" data-step="2">
+                            <div class="step-circle">2</div>
+                            <div class="step-label">Script Generation</div>
+                        </div>
+                        <div class="step" data-step="3">
+                            <div class="step-circle">3</div>
+                            <div class="step-label">Storyboard Breakdown</div>
+                        </div>
+                        <div class="step" data-step="4">
+                            <div class="step-circle">4</div>
+                            <div class="step-label">Character Recognition</div>
+                        </div>
+                        <div class="step" data-step="5">
+                            <div class="step-circle">5</div>
+                            <div class="step-label">Character Images</div>
+                        </div>
+                        <div class="step" data-step="6">
+                            <div class="step-circle">6</div>
+                            <div class="step-label">Shot Images</div>
+                        </div>
+                        <div class="step" data-step="7">
+                            <div class="step-circle">7</div>
+                            <div class="step-label">Digital Human</div>
+                        </div>
+                        <div class="step" data-step="8">
+                            <div class="step-circle">8</div>
+                            <div class="step-label">Final Composition</div>
+                        </div>
+                    </div>
+            </div>
+            
+                <!-- 输入区域 -->
+                <div class="input-section" id="input-section">
+                    <h3>🚀 Start Creating Your Video</h3>
+                    <form id="video-form">
+                        <div class="form-group">
+                            <label class="form-label">Video Creative Description</label>
+                            <textarea 
+                                class="form-input" 
+                                id="prompt-input"
+                                placeholder="Describe the video content you want to create, e.g.: A heartwarming story about a little cat learning to ride a bicycle..."
+                                required
+                            ></textarea>
+                </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Video Style</label>
+                                <select class="form-select" id="style-select">
+                                    <option value="Realistic">Realistic</option>
+                                    <option value="Artistic">Artistic</option>
+                                    <option value="Cartoon">Cartoon</option>
+                                    <option value="Cinematic">Cinematic</option>
+                                    <option value="Anime">Anime</option>
+                                </select>
+            </div>
+            
+                            <div class="form-group">
+                                <label class="form-label">Aspect Ratio</label>
+                                <select class="form-select" id="ratio-select">
+                                    <option value="16:9">Landscape (16:9)</option>
+                                    <option value="9:16">Portrait (9:16)</option>
+                                    <option value="1:1">Square (1:1)</option>
+                                    <option value="4:3">Standard (4:3)</option>
+                                </select>
+                </div>
+            </div>
+                        
+                        <button type="submit" class="btn btn-primary" id="generate-btn">
+                            ✨ Start Video Generation
+                        </button>
+                        
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" id="test-digital-human-btn">
+                                🤖 Test Digital Human
+                            </button>
+                        </div>
+                    </form>
+        </div>
+        
+                <!-- 结果展示区域 -->
+                <div class="results-panel" id="results-panel">
+                    <h3>📋 Generation Results</h3>
+                    <div id="results-content">
+                        <div class="result-item">
+                            <div class="result-title">Waiting to start...</div>
+                            <div class="result-content">Please fill in your video creative description and click the generate button to start creating</div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+
+            <!-- 右侧面板 -->
+            <div class="sidebar-right">
+                <!-- 进度面板 -->
+                <div class="progress-panel">
+                    <h3>📊 Generation Progress</h3>
+                    <div class="progress-item">
+                        <span class="progress-label">Script Generation</span>
+                        <div class="progress-status">
+                            <div class="status-dot pending"></div>
+                            <span>Waiting</span>
+    </div>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">Storyboard Breakdown</span>
+                        <div class="progress-status">
+                            <div class="status-dot pending"></div>
+                            <span>Waiting</span>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">Character Recognition</span>
+                        <div class="progress-status">
+                            <div class="status-dot pending"></div>
+                            <span>Waiting</span>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">Character Images</span>
+                        <div class="progress-status">
+                            <div class="status-dot pending"></div>
+                            <span>Waiting</span>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">Shot Images</span>
+                        <div class="progress-status">
+                            <div class="status-dot pending"></div>
+                            <span>Waiting</span>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">Video Generation</span>
+                        <div class="progress-status">
+                            <div class="status-dot pending"></div>
+                            <span>Waiting</span>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">Digital Human</span>
+                        <div class="progress-status">
+                            <div class="status-dot pending"></div>
+                            <span>Waiting</span>
+                        </div>
+                    </div>
+                    <div class="progress-item">
+                        <span class="progress-label">Final Composition</span>
+                        <div class="progress-status">
+                            <div class="status-dot pending"></div>
+                            <span>Waiting</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 预览面板 -->
+                <div class="progress-panel" id="preview-panel">
+                    <h3>👥 Character Preview</h3>
+                    <div id="character-preview">
+                        <div class="result-item">
+                            <div class="result-content">Characters will be displayed here after recognition is complete</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 悬浮操作按钮 -->
+    <div class="floating-actions">
+        <button class="floating-btn" id="download-btn" title="Download Video" style="display: none;">
+            📥
+        </button>
+        <button class="floating-btn" id="refresh-btn" title="Restart">
+            🔄
+        </button>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // 全局状态管理
+        const AppState = {
+            currentStep: 1,
+            maxSteps: 9, // 增加了分镜图片生成和数字人视频生成步骤
+            isGenerating: false,
+            generatedData: {
+                script: '',
+                shots: [],
+                characters: [],
+                dialogues: [],
+                shotImages: [],
+                videos: [],
+                digitalHumanVideos: []
+            }
+        };
+
+        // DOM 元素
+        const elements = {
+            form: document.getElementById('video-form'),
+            generateBtn: document.getElementById('generate-btn'),
+            promptInput: document.getElementById('prompt-input'),
+            styleSelect: document.getElementById('style-select'),
+            ratioSelect: document.getElementById('ratio-select'),
+            resultsContent: document.getElementById('results-content'),
+            notification: document.getElementById('notification'),
+            downloadBtn: document.getElementById('download-btn'),
+            refreshBtn: document.getElementById('refresh-btn'),
+            characterPreview: document.getElementById('character-preview')
+        };
+
+        // 工具函数
+        const utils = {
+            // 显示通知
+            showNotification(message, type = 'info') {
+                elements.notification.textContent = message;
+                elements.notification.className = `notification ${type} show`;
+                setTimeout(() => {
+                    elements.notification.classList.remove('show');
+                }, 4000);
+            },
+
+            // 更新步骤状态
+            updateStep(stepNumber, status = 'active') {
+                // 重置所有步骤
+                document.querySelectorAll('.step').forEach(step => {
+                    step.classList.remove('active', 'completed');
+                });
+
+                // 设置已完成的步骤
+                for (let i = 1; i < stepNumber; i++) {
+                    const step = document.querySelector(`.step[data-step="${i}"]`);
+                    if (step) step.classList.add('completed');
+                }
+
+                // 设置当前步骤
+                const currentStep = document.querySelector(`.step[data-step="${stepNumber}"]`);
+                if (currentStep && status === 'active') {
+                    currentStep.classList.add('active');
+                } else if (currentStep && status === 'completed') {
+                    currentStep.classList.add('completed');
+                }
+
+                AppState.currentStep = stepNumber;
+                this.updateProgress();
+            },
+
+            // 更新进度条
+            updateProgress() {
+                const progress = ((AppState.currentStep - 1) / (AppState.maxSteps - 1)) * 100;
+                const progressLine = document.querySelector('.steps-container');
+                if (progressLine) {
+                    progressLine.style.setProperty('--progress', `${progress}%`);
+                }
+            },
+
+            // 更新进度面板状态
+            updateProgressStatus(taskName, status) {
+                const progressItems = document.querySelectorAll('.progress-item');
+                const taskMap = {
+                    'script': 0,
+                    'breakdown': 1,
+                    'characters': 2,
+                    'characters': 3,
+                    'shotImages': 4,
+                    'videos': 5,
+                    'digitalHuman': 6,
+                    'combine': 7
+                };
+
+                const index = taskMap[taskName];
+                if (index !== undefined && progressItems[index]) {
+                    const statusDot = progressItems[index].querySelector('.status-dot');
+                    const statusText = progressItems[index].querySelector('.progress-status span');
+                    
+                    statusDot.className = `status-dot ${status}`;
+                    
+                    const statusTexts = {
+                        'pending': 'Waiting',
+                        'active': 'Processing',
+                        'completed': 'Completed',
+                        'failed': 'Failed'
+                    };
+                    
+                    statusText.textContent = statusTexts[status] || status;
+                }
+            },
+
+            // 设置按钮加载状态
+            setButtonLoading(button, loading) {
+                if (loading) {
+                    button.classList.add('btn-loading');
+                    button.disabled = true;
+                } else {
+                    button.classList.remove('btn-loading');
+                    button.disabled = false;
+                }
+            },
+
+            // 渲染结果内容
+            renderResults(title, content, type = 'text') {
+                const resultDiv = document.createElement('div');
+                resultDiv.className = 'result-item fade-in';
+                
+                if (type === 'characters') {
+                    resultDiv.innerHTML = `
+                        <div class="result-title">${title}</div>
+                        <div class="character-grid">
+                            ${content.map(char => `
+                                <div class="character-card">
+                                    <div class="character-avatar">${char.name[0]}</div>
+                                    <div class="character-name">${char.name}</div>
+                                    <div class="character-role">${char.role || 'Character'}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else if (type === 'shots') {
+                    resultDiv.innerHTML = `
+                        <div class="result-title">${title}</div>
+                        <div class="result-content">
+                            ${content.map((shot, index) => `
+                                <div style="margin-bottom: 10px;">
+                                    <strong>Shot ${index + 1}:</strong> ${shot}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else if (type === 'shotImages') {
+                    resultDiv.innerHTML = `
+                        <div class="result-title">${title}</div>
+                        <div class="image-grid">
+                            ${content.map((image, index) => `
+                                <div class="image-card">
+                                    <div class="image-thumbnail">
+                                        <img src="${image.image_url}" alt="Shot ${index + 1}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                        <div class="image-placeholder" style="display: none;">🖼️</div>
+                                    </div>
+                                    <div class="image-info">
+                                        <div class="image-title">Shot ${index + 1}</div>
+                                        <div class="image-status">${image.status === 'success' ? '✅ Complete' : '❌ Failed'}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else if (type === 'videos') {
+                    resultDiv.innerHTML = `
+                        <div class="result-title">${title}</div>
+                        <div class="video-grid">
+                            ${content.map((video, index) => `
+                                <div class="video-card">
+                                    <div class="video-thumbnail">🎬</div>
+                                    <div class="video-info">
+                                        <div class="video-title">Shot ${index + 1}</div>
+                                        <div class="video-status">${video.success ? '✅ Complete' : '❌ Failed'}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else if (type === 'digitalHuman') {
+                    resultDiv.innerHTML = `
+                        <div class="result-title">${title}</div>
+                        <div class="digital-human-grid">
+                            ${content.map((video, index) => `
+                                <div class="digital-human-card">
+                                    <div class="digital-human-thumbnail">🤖</div>
+                                    <div class="digital-human-info">
+                                        <div class="digital-human-title">Digital Human ${index + 1}</div>
+                                        <div class="digital-human-status">${video.success ? '✅ Complete' : '❌ Failed'}</div>
+                                        ${video.audio_filename ? `<div class="digital-human-audio">🎵 ${video.audio_filename}</div>` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else if (type === 'text') {
+                    resultDiv.innerHTML = `
+                        <div class="result-title">${title}</div>
+                        <div class="result-content">${content}</div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result-title">${title}</div>
+                        <div class="result-content">${typeof content === 'string' ? content : JSON.stringify(content)}</div>
+                    `;
+                }
+                
+                elements.resultsContent.appendChild(resultDiv);
+            },
+
+            // 清空结果
+            clearResults() {
+                elements.resultsContent.innerHTML = `
+                    <div class="result-item">
+                        <div class="result-title">Waiting to start...</div>
+                        <div class="result-content">Please fill in your video creative description and click the generate button to start creating</div>
+                    </div>
+                `;
+            }
+        };
+
+        // API 调用函数
+        const api = {
+            async generateScript(prompt, style, aspectRatio) {
+                utils.updateProgressStatus('script', 'active');
+                const response = await fetch('http://localhost:8000/api/video/step1', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: prompt,
+                        style: style,
+                        aspect_ratio: aspectRatio
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    utils.updateProgressStatus('script', 'completed');
+                    AppState.generatedData.script = data.script;
+                    utils.renderResults('📝 Generated Script', data.script);
+                    return data.script;
+                } else {
+                    utils.updateProgressStatus('script', 'failed');
+                    throw new Error(data.error || 'Script generation failed');
+                }
+            },
+
+            async breakdownShots(script) {
+                utils.updateProgressStatus('breakdown', 'active');
+                const response = await fetch('http://localhost:8000/api/video/breakdown-shots', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ script: script })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    utils.updateProgressStatus('breakdown', 'completed');
+                    AppState.generatedData.shots = data.shots;
+                    utils.renderResults('🎬 Storyboard Breakdown', data.shots, 'shots');
+                    return data.shots;
+                } else {
+                    utils.updateProgressStatus('breakdown', 'failed');
+                    throw new Error(data.error || 'Storyboard breakdown failed');
+                }
+            },
+
+            async extractCharacters(script) {
+                utils.updateProgressStatus('characters', 'active');
+                const response = await fetch('http://localhost:8000/api/video/characters', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ script: script })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    utils.updateProgressStatus('characters', 'completed');
+                    AppState.generatedData.characters = data.characters;
+                    utils.renderResults('👥 Recognized Characters', data.characters, 'characters');
+                    this.updateCharacterPreview(data.characters);
+                    return data.characters;
+                } else {
+                    utils.updateProgressStatus('characters', 'failed');
+                    throw new Error(data.error || 'Character recognition failed');
+                }
+            },
+
+            updateCharacterPreview(characters) {
+                if (characters && characters.length > 0) {
+                    elements.characterPreview.innerHTML = `
+                        <div class="character-grid">
+                            ${characters.map(char => `
+                                <div class="character-card">
+                                    <div class="character-avatar">${char.name[0]}</div>
+                                    <div class="character-name">${char.name}</div>
+                                    <div class="character-role">${char.role || 'Character'}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            },
+
+            async generateCharacterImages() {
+                utils.updateProgressStatus('characters', 'active');
+                const response = await fetch('http://localhost:8000/api/video/generate-character-images', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    utils.updateProgressStatus('characters', 'completed');
+                    utils.renderResults('🖼️ Character Image Generation', `Successfully generated images for ${data.results.length} characters`);
+                    return data;
+                } else {
+                    utils.updateProgressStatus('characters', 'failed');
+                    throw new Error(data.error || 'Character image generation failed');
+                }
+            },
+
+            async generateShotImages() {
+                utils.updateProgressStatus('shotImages', 'active');
+                try {
+                    const response = await fetch('http://localhost:8000/api/video/generate-shot-images', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        utils.updateProgressStatus('shotImages', 'completed');
+                        if (data.results && Array.isArray(data.results)) {
+                            utils.renderResults('🖼️ Shot Image Generation', data.results, 'shotImages');
+                            AppState.generatedData.shotImages = data.results;
+                        } else {
+                            utils.renderResults('🖼️ Shot Image Generation', 'No results available', 'text');
+                        }
+                        return data;
+                    } else {
+                        utils.updateProgressStatus('shotImages', 'failed');
+                        throw new Error(data.error || 'Shot image generation failed');
+                    }
+                } catch (error) {
+                    utils.updateProgressStatus('shotImages', 'failed');
+                    console.error('Shot image generation error:', error);
+                    throw error;
+                }
+            },
+
+            async generateVideos(shots, style, aspectRatio) {
+                utils.updateProgressStatus('videos', 'active');
+                const videos = [];
+                
+                for (let i = 0; i < shots.length; i++) {
+                    try {
+                        utils.showNotification(`Generating shot ${i + 1}/${shots.length}...`, 'info');
+                        
+                        const response = await fetch('http://localhost:8000/api/video/generate-video', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                shot: shots[i],
+                                style: style,
+                                aspect_ratio: aspectRatio
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        videos.push(data);
+                        
+                        if (!data.success) {
+                            utils.showNotification(`Shot ${i + 1} generation failed: ${data.error || 'Unknown error'}`, 'error');
+                        }
+                    } catch (error) {
+                        videos.push({ success: false, error: error.message });
+                    }
+                }
+                
+                utils.updateProgressStatus('videos', 'completed');
+                AppState.generatedData.videos = videos;
+                utils.renderResults('🎥 Video Generation Complete', videos, 'videos');
+                return videos;
+            },
+
+            async generateDigitalHumanVideos() {
+                utils.updateProgressStatus('digitalHuman', 'active');
+                const response = await fetch('http://localhost:8000/api/video/generate-all-dialogues-digital-human', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    utils.updateProgressStatus('digitalHuman', 'completed');
+                    // 获取生成的数字人视频列表
+                    const videosResponse = await fetch('http://localhost:8000/api/video/generated-videos');
+                    const videosData = await videosResponse.json();
+                    const digitalHumanVideos = videosData.filter(video => video.style === 'DigitalHuman');
+                    
+                    utils.renderResults('🤖 Digital Human Video Generation', digitalHumanVideos, 'digitalHuman');
+                    AppState.generatedData.digitalHumanVideos = digitalHumanVideos;
+                    return data;
+                } else {
+                    utils.updateProgressStatus('digitalHuman', 'failed');
+                    throw new Error(data.error || 'Digital human video generation failed');
+                }
+            },
+
+            async combineVideos() {
+                utils.updateProgressStatus('combine', 'active');
+                const response = await fetch('http://localhost:8000/api/video/proxy-combine', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    utils.updateProgressStatus('combine', 'completed');
+                    utils.renderResults('🎉 Video Composition Complete', 'All shots have been successfully merged into a complete video');
+                    elements.downloadBtn.style.display = 'block';
+                    return data;
+                } else {
+                    utils.updateProgressStatus('combine', 'failed');
+                    throw new Error(data.error || 'Video composition failed');
+                }
+            }
+        };
+
+        // 主要生成流程
+        async function generateVideo() {
+            if (AppState.isGenerating) return;
+            
+            const prompt = elements.promptInput.value.trim();
+            const style = elements.styleSelect.value;
+            const aspectRatio = elements.ratioSelect.value;
+            
+            if (!prompt) {
+                utils.showNotification('Please enter a video creative description', 'error');
+                return;
+            }
+            
+            AppState.isGenerating = true;
+            utils.setButtonLoading(elements.generateBtn, true);
+            utils.clearResults();
+            
+            try {
+                // 第1步：更新到剧本生成
+                utils.updateStep(2);
+                utils.showNotification('Generating script...', 'info');
+                const script = await api.generateScript(prompt, style, aspectRatio);
+                
+                // 第2步：分镜拆解
+                utils.updateStep(3);
+                utils.showNotification('Breaking down storyboard...', 'info');
+                const shots = await api.breakdownShots(script);
+                
+                // 第3步：角色识别
+                utils.updateStep(4);
+                utils.showNotification('Recognizing characters...', 'info');
+                const characters = await api.extractCharacters(script);
+                
+                // 第4步：生成角色图像
+                utils.updateStep(5);
+                utils.showNotification('Generating character images...', 'info');
+                await api.generateCharacterImages();
+                
+                // 第5步：生成分镜图片
+                utils.updateStep(6);
+                utils.showNotification('Generating shot images...', 'info');
+                await api.generateShotImages();
+                
+                // 第6步：生成视频
+                utils.updateStep(7);
+                utils.showNotification('Generating video shots...', 'info');
+                const videos = await api.generateVideos(shots, style, aspectRatio);
+                
+                // 第7步：生成数字人视频
+                utils.updateStep(8);
+                utils.showNotification('Generating digital human videos...', 'info');
+                await api.generateDigitalHumanVideos();
+                
+                // 第8步：合成视频
+                utils.updateStep(9);
+                utils.showNotification('Composing final video...', 'info');
+                await api.combineVideos();
+                
+                // 完成
+                utils.showNotification('🎉 Video generation completed!', 'success');
+                
+            } catch (error) {
+                console.error('Generation process error:', error);
+                utils.showNotification(`Generation failed: ${error.message}`, 'error');
+            } finally {
+                AppState.isGenerating = false;
+                utils.setButtonLoading(elements.generateBtn, false);
+            }
+        }
+
+        // 事件监听器
+        elements.form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            generateVideo();
+        });
+
+        elements.refreshBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to restart? Current progress will be lost.')) {
+                location.reload();
+            }
+        });
+
+        elements.downloadBtn.addEventListener('click', () => {
+            window.open('http://localhost:8000/download/combined_video.mp4', '_blank');
+        });
+
+        // 测试数字人视频生成
+        document.getElementById('test-digital-human-btn').addEventListener('click', async () => {
+            if (AppState.isGenerating) return;
+            
+            AppState.isGenerating = true;
+            utils.setButtonLoading(document.getElementById('test-digital-human-btn'), true);
+            
+            try {
+                utils.showNotification('Testing digital human video generation...', 'info');
+                await api.generateDigitalHumanVideos();
+                utils.showNotification('Digital human video generation test completed!', 'success');
+            } catch (error) {
+                console.error('Digital human test error:', error);
+                utils.showNotification(`Digital human test failed: ${error.message}`, 'error');
+            } finally {
+                AppState.isGenerating = false;
+                utils.setButtonLoading(document.getElementById('test-digital-human-btn'), false);
+            }
+        });
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            utils.updateStep(1);
+            utils.showNotification('Welcome to AIVA AI Video Generation Platform with Digital Human!', 'info');
+        });
+    </script>
+</body>
+</html>

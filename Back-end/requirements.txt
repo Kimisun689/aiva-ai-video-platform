@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+sqlalchemy
+aiosqlite
+httpx
+volcengine
+aiofiles
+moviepy
+requests 
+passlib[bcrypt]
+python-jose[cryptography]
+greenlet

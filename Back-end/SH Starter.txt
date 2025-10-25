@@ -1,0 +1,35 @@
+SETUP:
+lsof -i :8080
+kill <PID>
+"/Users/kimisun/Desktop/AIVA/ AIVA Old/Back-end/venv/bin/python" -m uvicorn Back-end.main:app --host 0.0.0.0 --port 8000
+cd aiva-nextjs && ./start-dev.sh
+
+DATABASE:
+cd /Users/kimisun/Desktop/AIVA/Back-end && sqlite3 prompts.db
+
+.tables
+
+for initial prompt: SELECT * FROM prompts;
+
+for ai-generated script: SELECT * FROM ai_scripts;
+
+for ai-breakdowns: SELECT * FROM shot_breakdowns;
+
+for ai-dialogues: SELECT * FROM dialogue_extracts;
+
+for generated-videos: SELECT * FROM generated_videos;
+-- success: SELECT * FROM generated_videos WHERE status = 'success';
+-- failed: SELECT * FROM generated_videos WHERE status = 'failed';
+-- latest 5: SELECT * FROM generated_videos ORDER BY created_at DESC LIMIT 5;
+
+show in table:
+.mode column
+.headers on
+SELECT id, shot_number, style, status, created_at FROM generated_videos;
+
+quit: .quit
+
+clear the data of the database: DELETE FROM <database>;
+
+clear data from all database:
+python3 "/Users/kimisun/Desktop/AIVA/ AIVA Old/Back-end/clear_sqlite_tables.py"

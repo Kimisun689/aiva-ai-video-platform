@@ -1,0 +1,2483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Video Generation Platform</title>
+    <style>
+        :root {
+            --primary-color: #FF6B35;
+            --secondary-color: #1f3857;
+            --background-gradient: linear-gradient(135deg, var(--secondary-color) 0%, #0e1825 100%);
+            --card-bg: rgba(26, 26, 26, 0.95);
+            --text-color: #fff;
+            --hover-effect: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --accent-color: #4ECDC4;
+            --success-color: #45B7D1;
+            --warning-color: #FFA726;
+            --gradient-primary: linear-gradient(45deg, #FF6B35, #FF8E53);
+            --gradient-accent: linear-gradient(45deg, #4ECDC4, #45B7D1);
+        }
+
+        /* 添加页面加载动画 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        .shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang SC', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background-gradient);
+            color: var(--text-color);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* 动态背景 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(78, 205, 196, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(69, 183, 209, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: var(--card-bg);
+            padding: 1.5rem 1rem;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+            position: fixed;
+            height: 100vh;
+            transition: var(--hover-effect);
+        }
+
+        .sidebar h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 20px rgba(255, 107, 53, 0.7);
+            font-weight: 700;
+            text-align: center;
+            padding: 0.8rem 0;
+            background: var(--gradient-primary);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+
+        .sidebar h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: var(--gradient-primary);
+            border-radius: 2px;
+        }
+
+        .menu-item {
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--hover-effect);
+            background: rgba(51, 51, 51, 0.6);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255, 107, 53, 0.8), transparent);
+            transition: var(--hover-effect);
+            z-index: 0;
+        }
+
+        .menu-item:hover {
+            transform: translateX(5px) scale(1.02);
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.4);
+            background: rgba(51, 51, 51, 0.8);
+        }
+
+        .menu-item.active {
+            background: linear-gradient(45deg, rgba(255, 107, 53, 0.2), rgba(255, 107, 53, 0.1));
+            border-color: rgba(255, 107, 53, 0.3);
+        }
+
+        .menu-item:hover::before {
+            width: 100%;
+        }
+
+        .menu-item span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem 3rem;
+            margin-left: 240px;
+            overflow-y: auto;
+            height: 100vh;
+            scroll-behavior: smooth;
+            animation-delay: 0.4s;
+            margin-top: 60px;
+        }
+
+        .process-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .process-steps::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-primary);
+            opacity: 0.3;
+        }
+
+        .step {
+            position: relative;
+            text-align: center;
+            flex: 1;
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 0;
+            width: 50%;
+            height: 2px;
+            background: var(--primary-color);
+            z-index: 1;
+        }
+
+        .step-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(51, 51, 51, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.8rem;
+            position: relative;
+            z-index: 2;
+            transition: var(--hover-effect);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .step.active .step-circle {
+            background: var(--gradient-primary);
+            color: #000;
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.6);
+            border-color: rgba(255, 107, 53, 0.5);
+            transform: scale(1.1);
+        }
+
+        .step.completed .step-circle {
+            background: var(--gradient-accent);
+            color: #000;
+            box-shadow: 0 0 15px rgba(78, 205, 196, 0.5);
+        }
+
+        .step-label {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .step.active .step-label {
+            color: var(--text-color);
+        }
+
+        .generation-section {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem; /* 减小间距 */
+            margin-bottom: 3rem;
+        }
+
+        .prompt-section, .aspect-ratio-section, .style-section {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            transition: var(--hover-effect);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .prompt-section::before, .aspect-ratio-section::before, .style-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+            transform: scaleX(0);
+            transition: var(--hover-effect);
+        }
+
+        .prompt-section:hover::before, .aspect-ratio-section:hover::before, .style-section:hover::before {
+            transform: scaleX(1);
+        }
+
+        .prompt-section:hover, .aspect-ratio-section:hover, .style-section:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .style-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* 调整网格大小 */
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .style-preview img {
+            width: 100%;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--hover-effect);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            aspect-ratio: 1/1;
+            object-fit: cover;
+        }
+
+        .style-preview img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 107, 53, 0.6);
+        }
+
+        .video-preview {
+            background: var(--card-bg);
+            padding: 3rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-preview::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(
+                from 0deg,
+                transparent,
+                rgba(255, 107, 53, 0.2),
+                transparent
+            );
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .video-preview p {
+            color: #888;
+            font-size: 1.2rem;
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #888;
+            background: var(--card-bg);
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            font-size: 0.9rem;
+            border-radius: 16px 16px 0 0;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            background: rgba(51, 51, 51, 0.6);
+            color: var(--text-color);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            transition: var(--hover-effect);
+            font-size: 1rem;
+            line-height: 1.6;
+            resize: none;
+            backdrop-filter: blur(10px);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+            background: rgba(51, 51, 51, 0.8);
+        }
+
+        /* 美化按钮 */
+        button {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--hover-effect);
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+            background: var(--gradient-primary);
+            color: #000;
+            box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
+            transition: var(--hover-effect);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.5);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 美化输入框 */
+        input[type="text"] {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(51, 51, 51, 0.6);
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: var(--hover-effect);
+            backdrop-filter: blur(10px);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+            background: rgba(51, 51, 51, 0.8);
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gradient-primary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #FF8E53, #FF6B35);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 200px;
+                padding: 1rem;
+            }
+            
+            .process-steps {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .step:not(:last-child)::after {
+                display: none;
+            }
+            
+            .generation-section {
+                gap: 1rem;
+            }
+            
+            .prompt-section, .aspect-ratio-section, .style-section {
+                padding: 1.5rem;
+            }
+        }
+
+        /* 加载状态美化 */
+        .loading-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            padding: 2rem;
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 成功状态美化 */
+        .success-state {
+            background: linear-gradient(45deg, rgba(78, 205, 196, 0.1), rgba(69, 183, 209, 0.1));
+            border: 1px solid rgba(78, 205, 196, 0.3);
+            color: #4ECDC4;
+        }
+
+        /* 错误状态美化 */
+        .error-state {
+            background: linear-gradient(45deg, rgba(255, 107, 53, 0.1), rgba(255, 167, 38, 0.1));
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            color: #FF6B35;
+        }
+
+        /* 按钮涟漪效果 */
+        button {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+            animation: ripple-animation 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.6);
+            background: rgba(51, 51, 51, 0.8);
+        }
+
+        button {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--hover-effect);
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
+            transition: var(--hover-effect);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .prompt-options {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .prompt-options button {
+            flex: 1;
+            background-color: rgba(51, 51, 51, 0.6);
+            color: var(--text-color);
+        }
+
+        .prompt-options button.active {
+            background: linear-gradient(45deg, #FF6B35, #FF8E53);
+            color: #000;
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.5);
+        }
+
+        h3 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #FF6B35;
+            text-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
+        }
+        .main-content::before {
+            content: '';
+            display: block;
+            height: 4px;
+            background-color: var(--primary-color);
+            width: 100%;
+            margin-bottom: 2rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .style-preview img.selected {
+            border: 3px solid #FF6B35;
+            box-shadow: 0 0 8px #FF6B35;
+        }
+        .digital-human-preview > div.selected {
+            border: 3px solid #FF6B35;
+            box-shadow: 0 0 8px #FF6B35;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1>AIVA</h1>
+        <div class="menu-item" onclick="window.location.href='../Front-end/index.html'">🏠 Home</div>
+        <div class="menu-item active" onclick="window.location.href='../Front-end/Generate.html'">🎥 Generate</div>
+        <div class="menu-item" onclick="window.location.href='../Front-end/Community.html'">👥 Community</div>
+        <div class="menu-item" onclick="window.location.href='../Front-end/DigitalAssets.html'">💎 Digital Assets</div>
+        <div class="menu-item" onclick="window.location.href='../Front-end/MyAccount.html'">👤 My Account</div>
+    </div>
+    
+    <div class="main-content">
+        <div class="generation-section">
+            <div class="prompt-section" id="prompt-section">
+                <h3>📝 Prompt</h3>
+                <div class="prompt-options">
+                    <button class="active">My Story</button>
+                    <button>Random Inspiration</button>
+                    <button>AI Generation</button>
+                </div>
+                <textarea id="prompt-input" placeholder="Enter your creative prompt..."></textarea>
+                <button id="submit-btn" style="margin-top: 1rem; background: linear-gradient(45deg, #FF6B35, #FF8E53); color: #000;">Submit</button>
+                <div id="loading-animation" style="display:none; margin-top:1.5rem; text-align:center;">
+                    <div class="spinner" style="margin:0 auto 1rem auto; width:48px; height:48px; border:6px solid #eee; border-top:6px solid #FF6B35; border-radius:50%; animation:spin 1s linear infinite;"></div>
+                    <div style="color:#FF6B35; font-weight:600;">AI is generating your script...</div>
+                </div>
+                <div id="script-result" style="margin-top:2rem; display:none; position:relative;">
+                    <div style="display: flex; gap: 3%;">
+                        <div id="breakdown-shots" style="flex:1; background:rgba(51,51,51,0.8); color:#fff; padding:1.5rem; border-radius:12px; min-height:100px; white-space:pre-wrap;"></div>
+                        <div id="dialogues" style="flex:1; background:rgba(51,51,51,0.8); color:#fff; padding:1.5rem; border-radius:12px; min-height:100px; white-space:pre-wrap; position:relative;">
+                            <span style="color:#FF6B35;">Extracting dialogues...</span>
+                            <button id="select-digital-btn" style="position:absolute; right:20px; bottom:20px; background:linear-gradient(45deg, #FF6B35, #FF8E53); color:#000; border:none; border-radius:8px; padding:0.5rem 1.2rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.15); display:none;">Select Digital Human & Style</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="aspect-ratio-section" id="aspect-ratio-section" style="display:none;">
+                <h3>📐 Aspect Ratio</h3>
+                <div style="display: flex; gap: 1.5rem; margin-top: 1.5rem;">
+                    <button style="background-color: #FF6B35; color: #000;">16:9</button>
+                    <button style="background-color: rgba(51, 51, 51, 0.6); color: #fff;">4:3</button>
+                </div>
+            </div>
+            
+            <div class="style-section" id="style-section" style="display:none;">
+                <h3>🎨 Visual Style</h3>
+                <div class="style-preview">
+                    <img src="https://img1.baidu.com/it/u=1215996955,4211864184&fm=253&app=138&f=JPEG?w=800&h=1421" alt="Cyberpunk">
+                    <img src="https://iknow-pic.cdn.bcebos.com/adaf2edda3cc7cd9f13fea5a2b01213fb80e9127" alt="Oil Painting">
+                    <img src="https://img1.baidu.com/it/u=3138341781,3608576135&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=750" alt="Realistic">
+                </div>
+            </div>
+            <div class="digital-human-section" id="digital-human-section" style="display:none;">
+                <h3>🧑‍💻 Digital Human</h3>
+                <div class="digital-human-preview" style="display:flex; gap:1.5rem;">
+                    <div style="background:#222; color:#fff; border-radius:12px; padding:1.2rem; min-width:120px; text-align:center;">Human A</div>
+                    <div style="background:#222; color:#fff; border-radius:12px; padding:1.2rem; min-width:120px; text-align:center;">Human B</div>
+                    <div style="background:#222; color:#fff; border-radius:12px; padding:1.2rem; min-width:120px; text-align:center;">Human C</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="video-preview">
+            <p>Video Preview Area</p>
+        </div>
+
+        <footer>
+            <p>© 2023 AI Video Generation Platform. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <!-- 多重FFmpeg加载策略 -->
+    <script>
+        // 定义FFmpeg加载函数
+        function loadFFmpeg() {
+            return new Promise((resolve, reject) => {
+                // 检查是否已经加载
+                if (typeof FFmpeg !== 'undefined') {
+                    console.log('FFmpeg already loaded');
+                    resolve(FFmpeg);
+                    return;
+                }
+                
+                // CDN源列表
+                const cdnSources = [
+                    'https://unpkg.com/@ffmpeg/ffmpeg@0.9.8/dist/ffmpeg.min.js',
+                    'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.9.8/dist/ffmpeg.min.js',
+                    'https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js',
+                    'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js'
+                ];
+                
+                let currentIndex = 0;
+                
+                function tryNextCDN() {
+                    if (currentIndex >= cdnSources.length) {
+                        reject(new Error('All CDN sources failed'));
+                        return;
+                    }
+                    
+                    const src = cdnSources[currentIndex];
+                    console.log(`Trying FFmpeg CDN: ${src}`);
+                    
+                    const script = document.createElement('script');
+                    script.src = src;
+                    script.onload = () => {
+                        console.log(`✅ FFmpeg loaded from: ${src}`);
+                        if (typeof FFmpeg !== 'undefined') {
+                            resolve(FFmpeg);
+                        } else {
+                            currentIndex++;
+                            setTimeout(tryNextCDN, 1000);
+                        }
+                    };
+                    script.onerror = () => {
+                        console.log(`❌ Failed to load from: ${src}`);
+                        currentIndex++;
+                        setTimeout(tryNextCDN, 1000);
+                    };
+                    
+                    document.head.appendChild(script);
+                }
+                
+                tryNextCDN();
+            });
+        }
+        
+        // 页面加载时尝试加载FFmpeg
+        window.loadFFmpegPromise = loadFFmpeg();
+    </script>
+    <script>
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing...');
+            
+            // 初始化提示选项按钮
+            const buttons = document.querySelectorAll('.prompt-options button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // 初始化主页按钮
+            const homeButton = document.querySelector('.menu-item');
+            if (homeButton) {
+                homeButton.addEventListener('click', function() {
+                    window.location.href = '../Front-end/index.html';
+                });
+            }
+
+            // 初始化风格图片选择
+            document.querySelectorAll('.style-preview img').forEach(img => {
+                img.addEventListener('click', function() {
+                    document.querySelectorAll('.style-preview img').forEach(i => i.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+
+            // 初始化提交按钮
+            initializeSubmitButton();
+        });
+
+        // 初始化提交按钮函数
+        function initializeSubmitButton() {
+            const submitBtn = document.getElementById('submit-btn');
+            console.log('Submit button found:', submitBtn);
+            
+            if (submitBtn) {
+                // 移除现有的事件监听器
+                submitBtn.removeEventListener('click', handleSubmit);
+                // 添加新的事件监听器
+                submitBtn.addEventListener('click', handleSubmit);
+                console.log('Submit button event listener added');
+            } else {
+                console.error('Submit button not found!');
+            }
+        }
+
+        // 提交按钮处理函数
+        async function handleSubmit() {
+            console.log('Submit button clicked!');
+            
+            // 获取prompt
+            const promptInput = document.getElementById('prompt-input');
+            const prompt = promptInput ? promptInput.value : '';
+            
+            if (!prompt.trim()) {
+                alert('Please enter a prompt first!');
+                return;
+            }
+            
+            console.log('Prompt:', prompt);
+            
+            // 获取风格
+            let style = 'Realistic'; // 默认风格
+            const styleImgs = document.querySelectorAll('.style-preview img');
+            styleImgs.forEach(img => {
+                if(img.classList.contains('selected')) {
+                    style = img.alt;
+                }
+            });
+            
+            // 获取比例
+            let aspect_ratio = '16:9'; // 默认比例
+            const ratioBtns = document.querySelectorAll('.aspect-ratio-section button');
+            ratioBtns.forEach(btn => {
+                if(btn.style.backgroundColor.includes('FF6B35')) {
+                    aspect_ratio = btn.textContent;
+                }
+            });
+            
+            console.log('Style:', style, 'Aspect ratio:', aspect_ratio);
+            
+            // 显示加载动画
+            const loadingAnimation = document.getElementById('loading-animation');
+            const scriptResult = document.getElementById('script-result');
+            
+            if (loadingAnimation) loadingAnimation.style.display = 'block';
+            if (scriptResult) scriptResult.style.display = 'none';
+            
+            // 发送POST请求
+            try {
+                console.log('Sending request to backend...');
+                const res = await fetch('http://localhost:8000/api/video/step1', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, style, aspect_ratio })
+                });
+                
+                console.log('Response received:', res.status);
+                const data = await res.json();
+                console.log('Response data:', data);
+                
+                if (loadingAnimation) loadingAnimation.style.display = 'none';
+                
+                if(data.success) {
+                    console.log('Script generated successfully!');
+                    // 隐藏合并按钮，因为这是新的剧本
+                    hideCombineVideoButton();
+                    
+                    if(data.script) {
+                        const scriptDiv = document.getElementById('script-result');
+                        const promptSection = document.getElementById('prompt-section');
+                        
+                        if (scriptDiv && promptSection) {
+                            // Hide all children except scriptDiv
+                            Array.from(promptSection.children).forEach(child => {
+                                if(child !== scriptDiv) child.style.display = 'none';
+                            });
+                            
+                            scriptDiv.style.display = 'block';
+                            scriptDiv.innerHTML = `
+                                <div style="margin-bottom: 15px; padding: 10px; background: rgba(255, 193, 7, 0.1); border: 1px solid #ffc107; border-radius: 5px; color: #ffc107;">
+                                    <strong>💡 Note:</strong> Previous video data has been cleared for this new script. Only videos generated from this script will be combined.
+                                </div>
+                                <div style="white-space: pre-wrap; color: #fff;">${data.script}</div>
+                            `;
+                            scriptDiv.setAttribute('data-script', data.script); // Store script for breakdown
+                            console.log('Script shown:', data.script);
+                            
+                            // Add Breakdown Shots button if not already present
+                            if (!document.getElementById('breakdown-btn')) {
+                                const btn = document.createElement('button');
+                                btn.id = 'breakdown-btn';
+                                btn.textContent = 'Breakdown Shots';
+                                btn.style.position = 'absolute';
+                                btn.style.right = '20px';
+                                btn.style.bottom = '20px';
+                                btn.style.background = 'linear-gradient(45deg, #FF6B35, #FF8E53)';
+                                btn.style.color = '#000';
+                                btn.style.border = 'none';
+                                btn.style.borderRadius = '8px';
+                                btn.style.padding = '0.5rem 1.2rem';
+                                btn.style.fontWeight = 'bold';
+                                btn.style.cursor = 'pointer';
+                                btn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+                                scriptDiv.appendChild(btn);
+                            }
+                        }
+                    }
+                } else {
+                    console.error('Submission failed:', data);
+                    alert('Submission failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch(e) {
+                console.error('Network error:', e);
+                if (loadingAnimation) loadingAnimation.style.display = 'none';
+                alert('Network error or backend not started. Please check if the backend server is running.');
+            }
+        }
+
+        document.addEventListener('click', async function(e) {
+            if (e.target && e.target.id === 'breakdown-btn') {
+                const scriptDiv = document.getElementById('script-result');
+                const script = document.getElementById('script-result').getAttribute('data-script') || scriptDiv.textContent;
+                // 清空内容
+                scriptDiv.style.display = 'block';
+                scriptDiv.innerHTML = `
+                    <div style="display: flex; gap: 3%;">
+                        <div id="breakdown-shots" style="flex:1; background:rgba(51,51,51,0.8); color:#fff; padding:1.5rem; border-radius:12px; min-height:100px; white-space:pre-wrap;">
+                            <span style="color:#FF6B35;">Generating breakdown shots...</span>
+                        </div>
+                        <div id="dialogues" style="flex:1; background:rgba(51,51,51,0.8); color:#fff; padding:1.5rem; border-radius:12px; min-height:100px; white-space:pre-wrap; position:relative;">
+                            <span style="color:#FF6B35;">Extracting dialogues...</span>
+                            <button id="select-digital-btn" style="position:absolute; right:20px; bottom:20px; background:linear-gradient(45deg, #FF6B35, #FF8E53); color:#000; border:none; border-radius:8px; padding:0.5rem 1.2rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.15); display:none;">Select Digital Human & Style</button>
+                        </div>
+                    </div>
+                `;
+                // 1. 先请求 breakdown shots
+                try {
+                    const res = await fetch('http://localhost:8000/api/video/breakdown-shots', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ script })
+                    });
+                    const data = await res.json();
+                    const shotsDiv = document.getElementById('breakdown-shots');
+                    if (data.success && data.shots) {
+                        window.breakdownShots = data.shots; // 保存到全局
+                        shotsDiv.innerHTML = data.shots.map((shot, idx) =>
+                            `<div style="margin-bottom:1em;"><b>Shot ${idx+1}:</b> ${shot}</div>`
+                        ).join('');
+                        // 2. breakdown 成功后再请求 dialogues
+                        const dialoguesDiv = document.getElementById('dialogues');
+                        dialoguesDiv.innerHTML = '<span style="color:#FF6B35;">Extracting dialogues...</span>';
+                        
+
+                        try {
+                            const res2 = await fetch('http://localhost:8000/api/video/dialogues', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ script })
+                            });
+                            const rawText = await res2.text();
+                            console.log('Dialogues raw response:', rawText);
+                            let data2;
+                            try {
+                                data2 = JSON.parse(rawText);
+                            } catch (e) {
+                                console.error('Dialogues JSON parse error:', e, rawText);
+                                dialoguesDiv.innerHTML = '<span style="color:#FF6B35;">Response is not valid JSON.</span>';
+                                return;
+                            }
+                            let dialogues = data2.dialogues;
+                            if (typeof dialogues === 'string') {
+                                try {
+                                    dialogues = JSON.parse(dialogues);
+                                } catch (e) {
+                                    dialogues = [];
+                                }
+                            }
+                            if (Array.isArray(dialogues)) {
+                                dialoguesDiv.innerHTML = `
+                                    <div style="font-weight:bold; color:#FF6B35; margin-bottom:0.5em;">Extracted Dialogues:</div>
+                                    ${dialogues.map(d => `<div style="margin-bottom:0.5em;">${d}</div>`).join('')}
+                                    <button id="select-digital-btn" style="position:absolute; right:20px; bottom:20px; background:linear-gradient(45deg, #FF6B35, #FF8E53); color:#000; border:none; border-radius:8px; padding:0.5rem 1.2rem; font-weight:bold; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,0.15);">Select Digital Human & Style</button>
+                                `;
+                                const selectBtn = document.getElementById('select-digital-btn');
+                                if (selectBtn) {
+                                    selectBtn.style.display = 'block';
+                                    selectBtn.onclick = async function() {
+                                        // 先获取人物信息
+                                        try {
+                                            const script = document.getElementById('script-result').getAttribute('data-script');
+                                            const characterResponse = await fetch('http://localhost:8000/api/video/characters', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ script })
+                                            });
+                                            
+                                            const characterData = await characterResponse.json();
+                                            let characters = [];
+                                            if (characterData.success && characterData.characters) {
+                                                characters = characterData.characters;
+                                            }
+                                            
+                                            // Show style, digital human, and aspect ratio sections
+                                            document.getElementById('style-section').style.display = 'block';
+                                            document.getElementById('digital-human-section').style.display = 'block';
+                                            document.getElementById('aspect-ratio-section').style.display = 'block';
+                                            
+                                            // Arrange them: style left, digital human right, aspect ratio bottom
+                                            const scriptResult = document.getElementById('script-result');
+                                            const styleSection = document.getElementById('style-section');
+                                            const digitalHumanSection = document.getElementById('digital-human-section');
+                                            const aspectRatioSection = document.getElementById('aspect-ratio-section');
+                                            
+                                            // Clear scriptResult and append the real elements
+                                            scriptResult.innerHTML = '';
+                                            
+                                            // 添加人物信息区域
+                                            if (characters.length > 0) {
+                                                const characterSection = document.createElement('div');
+                                                characterSection.id = 'character-section';
+                                                characterSection.style.marginBottom = '2rem';
+                                                characterSection.innerHTML = `
+                                                    <h3>🎭 识别到 ${characters.length} 个人物</h3>
+                                                    <div class="character-display-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                                                        ${characters.map(character => `
+                                                            <div class="character-display-card" style="background: rgba(51, 51, 51, 0.6); border-radius: 12px; padding: 1rem; text-align: center; border: 1px solid rgba(255, 255, 255, 0.1);">
+                                                                <div class="character-display-avatar" style="width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 0.5rem; background: linear-gradient(45deg, #FF6B35, #FF8E53); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; color: #000;">
+                                                                    ${character.name.charAt(0)}
+                                                                </div>
+                                                                <div class="character-display-name" style="font-size: 1rem; font-weight: 600; color: #FF6B35; margin-bottom: 0.5rem;">${character.name}</div>
+                                                                <div class="character-display-info" style="font-size: 0.8rem; color: #ccc; line-height: 1.3;">
+                                                                    ${character.gender === 'male' ? '男性' : character.gender === 'female' ? '女性' : '其他'} | 
+                                                                    ${character.age_range ? character.age_range.replace('s', '多岁') : '未知年龄'}
+                                                                </div>
+                                                            </div>
+                                                        `).join('')}
+                                                    </div>
+                                                `;
+                                                scriptResult.appendChild(characterSection);
+                                                
+                                                // 自动生成人物画像
+                                                setTimeout(() => {
+                                                    generateCharacterImagesForDisplay(characters);
+                                                }, 1000);
+                                            }
+                                            
+                                            const flexDiv = document.createElement('div');
+                                            flexDiv.style.display = 'flex';
+                                            flexDiv.style.gap = '3%';
+                                            styleSection.style.flex = '1';
+                                            digitalHumanSection.style.flex = '1';
+                                            flexDiv.appendChild(styleSection);
+                                            flexDiv.appendChild(digitalHumanSection);
+                                            scriptResult.appendChild(flexDiv);
+                                            aspectRatioSection.style.marginTop = '2rem';
+                                            scriptResult.appendChild(aspectRatioSection);
+                                            
+                                            // 重新绑定事件
+                                            bindStyleSelect();
+                                            bindDigitalHumanSelect();
+                                            bindAspectRatioSelect();
+                                            
+                                        } catch (error) {
+                                            console.error('获取人物信息失败:', error);
+                                            // 如果获取人物信息失败，仍然显示风格和数字人选择
+                                            document.getElementById('style-section').style.display = 'block';
+                                            document.getElementById('digital-human-section').style.display = 'block';
+                                            document.getElementById('aspect-ratio-section').style.display = 'block';
+                                            
+                                            const scriptResult = document.getElementById('script-result');
+                                            const styleSection = document.getElementById('style-section');
+                                            const digitalHumanSection = document.getElementById('digital-human-section');
+                                            const aspectRatioSection = document.getElementById('aspect-ratio-section');
+                                            
+                                            scriptResult.innerHTML = '';
+                                            const flexDiv = document.createElement('div');
+                                            flexDiv.style.display = 'flex';
+                                            flexDiv.style.gap = '3%';
+                                            styleSection.style.flex = '1';
+                                            digitalHumanSection.style.flex = '1';
+                                            flexDiv.appendChild(styleSection);
+                                            flexDiv.appendChild(digitalHumanSection);
+                                            scriptResult.appendChild(flexDiv);
+                                            aspectRatioSection.style.marginTop = '2rem';
+                                            scriptResult.appendChild(aspectRatioSection);
+                                            
+                                            bindStyleSelect();
+                                            bindDigitalHumanSelect();
+                                            bindAspectRatioSelect();
+                                        }
+                                    };
+                                }
+                            } else {
+                                dialoguesDiv.innerHTML = '<span style="color:#FF6B35;">Failed to extract dialogues.</span>';
+                            }
+                        } catch (err) {
+                            console.error('Dialogues fetch error:', err);
+                            dialoguesDiv.innerHTML = '<span style="color:#FF6B35;">Network error or backend not started.</span>';
+                        }
+                    } else {
+                        shotsDiv.innerHTML = '<span style="color:#FF6B35;">Failed to breakdown shots.</span>';
+                    }
+                } catch (err) {
+                    document.getElementById('breakdown-shots').innerHTML = '<span style="color:#FF6B35;">Network error or backend not started.</span>';
+                }
+            }
+        });
+
+        function bindStyleSelect() {
+            const stylePreview = document.querySelector('.style-preview');
+            if (stylePreview) {
+                stylePreview.onclick = function(e) {
+                    if (e.target && e.target.tagName === 'IMG') {
+                        document.querySelectorAll('.style-preview img').forEach(i => i.classList.remove('selected'));
+                        e.target.classList.add('selected');
+                    }
+                };
+            }
+        }
+
+        function bindDigitalHumanSelect() {
+            const digitalHumanPreview = document.querySelector('.digital-human-preview');
+            if (digitalHumanPreview) {
+                digitalHumanPreview.onclick = function(e) {
+                    if (e.target && e.target.parentElement === digitalHumanPreview) {
+                        document.querySelectorAll('.digital-human-preview > div').forEach(i => i.classList.remove('selected'));
+                        e.target.classList.add('selected');
+                    }
+                };
+            }
+        }
+
+        function bindAspectRatioSelect() {
+            document.querySelectorAll('#aspect-ratio-section button').forEach(btn => {
+                btn.onclick = function() {
+                    document.querySelectorAll('#aspect-ratio-section button').forEach(i => {
+                        i.style.backgroundColor = 'rgba(51, 51, 51, 0.6)';
+                        i.style.color = '#fff';
+                    });
+                    this.style.backgroundColor = '#FF6B35';
+                    this.style.color = '#000';
+                };
+            });
+        }
+
+        // 在 style-section 和 digital-human-section 都显示时，右下角添加视频生成按钮
+        function showGenerateVideoButton() {
+            if (!document.getElementById('generate-video-btn')) {
+                const btn = document.createElement('button');
+                btn.id = 'generate-video-btn';
+                btn.textContent = 'Generate Video';
+                btn.style.position = 'fixed';
+                btn.style.right = '40px';
+                btn.style.bottom = '40px';
+                btn.style.background = 'linear-gradient(45deg, #FF6B35, #FF8E53)';
+                btn.style.color = '#000';
+                btn.style.border = 'none';
+                btn.style.borderRadius = '12px';
+                btn.style.padding = '1rem 2.5rem';
+                btn.style.fontWeight = 'bold';
+                btn.style.fontSize = '1.2rem';
+                btn.style.boxShadow = '0 4px 16px rgba(0,0,0,0.18)';
+                btn.style.zIndex = 9999;
+                btn.onclick = async function() {
+                    if (!window.breakdownShots || !Array.isArray(window.breakdownShots)) {
+                        alert('No breakdown shots found!');
+                        return;
+                    }
+                    
+                    // 预先检查FFmpeg
+                    console.log('Pre-checking FFmpeg before video generation...');
+                    try {
+                        const ffmpeg = await window.loadFFmpegPromise;
+                        console.log('FFmpeg available:', true);
+                        console.log('FFmpeg loaded successfully for video generation');
+                    } catch (error) {
+                        console.log('FFmpeg not available for video generation:', error);
+                    }
+                    
+                    // 立即改变按钮状态，防止重复点击
+                    const originalText = btn.textContent;
+                    btn.textContent = 'Generating...';
+                    btn.disabled = true;
+                    btn.style.opacity = '0.6';
+                    btn.style.cursor = 'not-allowed';
+                    
+                    // 显示进度提示
+                    const progressDiv = document.createElement('div');
+                    progressDiv.style.position = 'fixed';
+                    progressDiv.style.top = '50%';
+                    progressDiv.style.left = '50%';
+                    progressDiv.style.transform = 'translate(-50%, -50%)';
+                    progressDiv.style.background = 'rgba(0,0,0,0.9)';
+                    progressDiv.style.color = 'white';
+                    progressDiv.style.padding = '2rem';
+                    progressDiv.style.borderRadius = '12px';
+                    progressDiv.style.zIndex = '10000';
+                    progressDiv.style.textAlign = 'center';
+                    document.body.appendChild(progressDiv);
+                    
+                    const results = [];
+                    
+                    try {
+                        for (let i = 0; i < window.breakdownShots.length; i++) {
+                            const shot = window.breakdownShots[i];
+                            progressDiv.innerHTML = `
+                                <div style="margin-bottom:1rem;">Generating video for shot ${i+1}/${window.breakdownShots.length}</div>
+                                <div style="color:#FF6B35;">${shot.substring(0, 50)}...</div>
+                            `;
+                            
+                            let retryCount = 0;
+                            let shotCompleted = false;
+                            
+                            while (!shotCompleted) {
+                                try {
+                                    progressDiv.innerHTML = `
+                                        <div style="margin-bottom:1rem;">Generating video for shot ${i+1}/${window.breakdownShots.length}</div>
+                                        <div style="color:#FF6B35;">${shot.substring(0, 50)}...</div>
+                                        <div style="color:#888; margin-top:0.5rem;">Submitting to ByteDance AI...</div>
+                                    `;
+                                    
+                                    // 获取用户选择的风格和比例
+                                    const selectedStyle = document.querySelector('.style-preview img.selected')?.alt || 'Realistic';
+                                    const selectedAspectRatio = document.querySelector('#aspect-ratio-section button[style*="background-color: #FF6B35"]')?.textContent || '16:9';
+                                    
+                                    const res = await fetch('http://localhost:8000/api/video/generate-video', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ 
+                                            shot,
+                                            style: selectedStyle,
+                                            aspect_ratio: selectedAspectRatio
+                                        })
+                                    });
+                                    const data = await res.json();
+                                    console.log('Shot', i+1, 'API response:', data);
+                                    
+                                    if (data.success) {
+                                        results.push(data);
+                                        console.log('Shot', i+1, 'success:', data);
+                                        shotCompleted = true; // 标记完成
+                                    } else if (data.error && data.error.includes('50430')) {
+                                        // 并发限制错误，一直重试直到成功
+                                        retryCount++;
+                                        progressDiv.innerHTML += `<div style="color:orange; margin-top:0.5rem;">Concurrent limit hit, waiting 10 seconds before retry ${retryCount}...</div>`;
+                                        await new Promise(resolve => setTimeout(resolve, 10000)); // 等待10秒
+                                        // 继续循环，不标记完成
+                                    } else {
+                                        results.push(data);
+                                        console.log('Shot', i+1, 'failed:', data);
+                                        shotCompleted = true; // 标记完成（失败）
+                                    }
+                                } catch (e) {
+                                    retryCount++;
+                                    progressDiv.innerHTML += `<div style="color:red; margin-top:0.5rem;">Network error, retrying ${retryCount}...</div>`;
+                                    await new Promise(resolve => setTimeout(resolve, 5000)); // 等待5秒
+                                    // 继续循环，不标记完成
+                                }
+                            }
+                            
+                            // 显示当前shot的完成状态
+                            if (results[results.length - 1] && results[results.length - 1].success) {
+                                progressDiv.innerHTML += `<div style="color:green; margin-top:0.5rem;">✅ Shot ${i+1} completed successfully!</div>`;
+                            } else {
+                                progressDiv.innerHTML += `<div style="color:red; margin-top:0.5rem;">❌ Shot ${i+1} failed</div>`;
+                            }
+                            
+                            // 等待2秒显示完成状态，然后继续下一个shot
+                            await new Promise(resolve => setTimeout(resolve, 2000));
+                        }
+                    } finally {
+                        // 恢复按钮状态
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                        btn.style.cursor = 'pointer';
+                        
+                        // 移除进度提示
+                        if (document.body.contains(progressDiv)) {
+                            document.body.removeChild(progressDiv);
+                        }
+                    }
+                    
+                    // 显示结果
+                    const successCount = results.filter(r => r.success).length;
+                    const totalCount = results.length;
+                    
+                    if (successCount > 0) {
+                        alert(`Video generation completed!\n\nSuccess: ${successCount}/${totalCount} shots\n\nCheck console for video URLs.`);
+                        
+                        // 在控制台显示成功的视频链接
+                        results.forEach((result, index) => {
+                            if (result.success && result.video_url) {
+                                console.log(`🎬 Shot ${index + 1} Video URL:`, result.video_url);
+                            }
+                        });
+                    } else {
+                        alert(`Video generation failed!\n\nAll ${totalCount} shots failed.\n\nCheck console for error details.`);
+                    }
+                    
+                    // 显示合并视频按钮
+                    if (successCount > 0) {
+                        showCombineVideoButton();
+                    }
+                };
+                document.body.appendChild(btn);
+            }
+        }
+        function hideGenerateVideoButton() {
+            const btn = document.getElementById('generate-video-btn');
+            if (btn) btn.remove();
+        }
+        
+        function showCombineVideoButton() {
+            if (!document.getElementById('combine-video-btn')) {
+                const btn = document.createElement('button');
+                btn.id = 'combine-video-btn';
+                btn.textContent = '🎬 Combine Videos';
+                btn.style.position = 'fixed';
+                btn.style.bottom = '20px';
+                btn.style.right = '20px';
+                btn.style.zIndex = '1000';
+                btn.style.background = 'linear-gradient(45deg, #FF6B35, #FF8E53)';
+                btn.style.color = '#000';
+                btn.style.padding = '1rem 2rem';
+                btn.style.border = 'none';
+                btn.style.borderRadius = '12px';
+                btn.style.cursor = 'pointer';
+                btn.style.fontWeight = '600';
+                btn.style.boxShadow = '0 4px 15px rgba(255, 107, 53, 0.4)';
+                btn.style.transition = 'all 0.3s ease';
+                
+                btn.onmouseover = function() {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 6px 20px rgba(255, 107, 53, 0.6)';
+                };
+                
+                btn.onmouseout = function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '0 4px 15px rgba(255, 107, 53, 0.4)';
+                };
+                
+                btn.onclick = async function() {
+                    // 改变按钮状态
+                    const originalText = btn.textContent;
+                    btn.textContent = 'Combining...';
+                    btn.disabled = true;
+                    btn.style.opacity = '0.6';
+                    
+                    try {
+                        // 调用合并API
+                        const res = await fetch('http://localhost:8000/api/video/combine-videos', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                            // 显示合并结果
+                            showCombinedVideoResult(data);
+                        } else {
+                            alert('Failed to combine videos: ' + data.error);
+                        }
+                    } catch (e) {
+                        alert('Network error while combining videos: ' + e.message);
+                    } finally {
+                        // 恢复按钮状态
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                    }
+                };
+                
+                document.body.appendChild(btn);
+            }
+        }
+        
+        function hideCombineVideoButton() {
+            const btn = document.getElementById('combine-video-btn');
+            if (btn) btn.remove();
+        }
+        
+        function showCombinedVideoResult(data) {
+            // 创建结果显示窗口
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.background = 'rgba(0,0,0,0.8)';
+            modal.style.zIndex = '10000';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            
+            const content = document.createElement('div');
+            content.style.background = 'var(--card-bg)';
+            content.style.padding = '2rem';
+            content.style.borderRadius = '16px';
+            content.style.maxWidth = '800px';
+            content.style.maxHeight = '80vh';
+            content.style.overflow = 'auto';
+            content.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+            
+            content.innerHTML = `
+                <h2 style="color: var(--primary-color); margin-bottom: 1rem;">🎬 Combined Video Result</h2>
+                <div style="margin-bottom: 1rem;">
+                    <p><strong>Total Shots:</strong> ${data.total_shots}</p>
+                    <p><strong>Total Duration:</strong> ${data.total_duration} seconds</p>
+                    <p><strong>Message:</strong> ${data.message}</p>
+                </div>
+                
+                <h3 style="color: var(--primary-color); margin: 1.5rem 0 1rem 0;">Video Shots:</h3>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    ${data.videos.map(video => `
+                        <div style="background: rgba(51, 51, 51, 0.6); padding: 1rem; margin: 0.5rem 0; border-radius: 8px;">
+                            <p><strong>Shot ${video.shot_number}:</strong></p>
+                            <p style="color: #888; font-size: 0.9rem;">${video.shot_content.substring(0, 100)}...</p>
+                            <p><strong>Style:</strong> ${video.style} | <strong>Ratio:</strong> ${video.aspect_ratio}</p>
+                            <a href="${video.video_url}" target="_blank" style="color: var(--primary-color); text-decoration: none;">
+                                🔗 View Video
+                            </a>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div style="margin-top: 2rem; text-align: center;">
+                    <button onclick="downloadCombinedVideo()" style="background: var(--primary-color); color: #000; padding: 1rem 2rem; border: none; border-radius: 8px; cursor: pointer; margin-right: 1rem;">
+                        🎬 Combine & Download Video
+                    </button>
+                    <button onclick="this.closest('div[style*=\"position: fixed\"]').remove()" style="background: rgba(51, 51, 51, 0.6); color: #fff; padding: 1rem 2rem; border: none; border-radius: 8px; cursor: pointer;">
+                        Close
+                    </button>
+                </div>
+            `;
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            // 点击背景关闭
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
+        }
+        
+        async function downloadCombinedVideo() {
+            try {
+                // 显示下载进度
+                const downloadBtn = document.querySelector('button[onclick="downloadCombinedVideo()"]');
+                const originalText = downloadBtn.textContent;
+                downloadBtn.textContent = '🎬 Preparing Download...';
+                downloadBtn.disabled = true;
+                
+                // 显示进度模态框
+                const progressModal = document.createElement('div');
+                progressModal.style.position = 'fixed';
+                progressModal.style.top = '0';
+                progressModal.style.left = '0';
+                progressModal.style.width = '100%';
+                progressModal.style.height = '100%';
+                progressModal.style.background = 'rgba(0,0,0,0.8)';
+                progressModal.style.zIndex = '10000';
+                progressModal.style.display = 'flex';
+                progressModal.style.alignItems = 'center';
+                progressModal.style.justifyContent = 'center';
+                
+                const progressContent = document.createElement('div');
+                progressContent.style.background = 'var(--card-bg)';
+                progressContent.style.padding = '2rem';
+                progressContent.style.borderRadius = '16px';
+                progressContent.style.maxWidth = '500px';
+                progressContent.style.textAlign = 'center';
+                progressContent.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+                
+                progressContent.innerHTML = `
+                    <h3 style="color: var(--primary-color); margin-bottom: 1rem;">🎬 Downloading & Combining Videos</h3>
+                    <div id="combine-progress" style="margin: 1rem 0;">
+                        <div style="color: #888;">Starting download process...</div>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                        <div id="progress-bar" style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.3s;"></div>
+                    </div>
+                `;
+                
+                progressModal.appendChild(progressContent);
+                document.body.appendChild(progressModal);
+                
+                const progressDiv = document.getElementById('combine-progress');
+                const progressBar = document.getElementById('progress-bar');
+                
+                // 获取视频信息
+                progressDiv.innerHTML = '<div style="color: #888;">Getting video information...</div>';
+                progressBar.style.width = '30%';
+                
+                const res = await fetch('http://localhost:8000/api/video/combine-videos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await res.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error);
+                }
+                
+                progressDiv.innerHTML = '<div style="color: #888;">Combining videos...</div>';
+                progressBar.style.width = '70%';
+                
+                // 等待一下让用户看到进度
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                progressDiv.innerHTML = '<div style="color: #4CAF50;">✅ Video information ready!</div>';
+                progressBar.style.width = '100%';
+                
+                // 显示下载选项
+                setTimeout(() => {
+                    if (document.body.contains(progressModal)) {
+                        document.body.removeChild(progressModal);
+                    }
+                    showDownloadOptions(data);
+                }, 1000);
+                
+                // 恢复按钮状态
+                downloadBtn.textContent = originalText;
+                downloadBtn.disabled = false;
+                
+                // 显示成功消息
+                setTimeout(() => {
+                    if (document.body.contains(progressModal)) {
+                        document.body.removeChild(progressModal);
+                    }
+                    alert(`🎉 Video combination successful!\n\nTotal duration: ${data.total_duration} seconds\nShots combined: ${data.total_shots}\nFile size: ${(data.file_size / 1024 / 1024).toFixed(2)} MB\n\nVideo has been downloaded automatically.`);
+                }, 2000);
+                
+                
+            } catch (error) {
+                console.error('Video combination error:', error);
+                if (document.body.contains(progressModal)) {
+                    document.body.removeChild(progressModal);
+                }
+                
+                alert('❌ Video combination failed: ' + error.message);
+            } finally {
+                // 恢复按钮状态
+                const downloadBtn = document.querySelector('button[onclick="downloadCombinedVideo()"]');
+                if (downloadBtn) {
+                    downloadBtn.textContent = '🎬 Combine & Download Video';
+                    downloadBtn.disabled = false;
+                }
+            }
+        }
+        
+        function showDownloadResult(data) {
+            // 创建下载结果显示窗口
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.background = 'rgba(0,0,0,0.8)';
+            modal.style.zIndex = '10000';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            
+            const content = document.createElement('div');
+            content.style.background = 'var(--card-bg)';
+            content.style.padding = '2rem';
+            content.style.borderRadius = '16px';
+            content.style.maxWidth = '800px';
+            content.style.maxHeight = '80vh';
+            content.style.overflow = 'auto';
+            content.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+            
+            content.innerHTML = `
+                <h2 style="color: var(--primary-color); margin-bottom: 1rem;">📥 Download Complete!</h2>
+                <div style="margin-bottom: 1rem;">
+                    <p><strong>Total Shots:</strong> ${data.total_shots}</p>
+                    <p><strong>Total Duration:</strong> ${data.total_duration} seconds</p>
+                    <p><strong>Message:</strong> ${data.message}</p>
+                </div>
+                
+                <h3 style="color: var(--primary-color); margin: 1.5rem 0 1rem 0;">Downloaded Files:</h3>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    ${data.download_links.map(item => `
+                        <div style="background: rgba(51, 51, 51, 0.6); padding: 1rem; margin: 0.5rem 0; border-radius: 8px;">
+                            <p><strong>Shot ${item.shot_number}:</strong></p>
+                            <p style="color: #888; font-size: 0.9rem;">Local file: ${item.local_file}</p>
+                            <a href="${item.video_url}" target="_blank" style="color: var(--primary-color); text-decoration: none;">
+                                🔗 View Original Video
+                            </a>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div style="margin-top: 2rem; text-align: center;">
+                    <p style="color: #888; margin-bottom: 1rem;">
+                        ✅ Videos have been downloaded to your system's temp directory.<br>
+                        You can find them at: <code style="background: rgba(255,255,255,0.1); padding: 0.2rem 0.4rem; border-radius: 4px;">${data.download_links[0]?.local_file?.split('/').slice(0, -1).join('/') || 'temp directory'}</code>
+                    </p>
+                    <button onclick="this.closest('div[style*=\"position: fixed\"]').remove()" style="background: var(--primary-color); color: #000; padding: 1rem 2rem; border: none; border-radius: 8px; cursor: pointer;">
+                        Close
+                    </button>
+                </div>
+            `;
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            // 点击背景关闭
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
+        }
+        
+        async function checkCombineStatus() {
+            try {
+                const res = await fetch('http://localhost:8000/api/video/combine-status');
+                const data = await res.json();
+                
+                if (data.success && data.can_combine) {
+                    showCombineVideoButton();
+                }
+            } catch (e) {
+                // 忽略错误，可能是后端未启动
+                console.log('Could not check combine status:', e.message);
+            }
+        }
+        // 页面加载时不自动检查，只在视频生成完成后显示
+        // checkCombineStatus();
+        
+        // 确保页面加载时没有合并按钮
+        hideCombineVideoButton();
+
+
+            // 移除已存在的弹窗
+            const existingModal = document.querySelector('.character-modal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // 创建弹窗
+            const modal = document.createElement('div');
+            modal.className = 'character-modal';
+            
+            // 性别中文转换
+            function getGenderText(gender) {
+                return gender === 'male' ? '男性' : gender === 'female' ? '女性' : '其他';
+            }
+            
+            // 年龄中文转换
+            function getAgeText(ageRange) {
+                return ageRange ? ageRange.replace('s', '多岁') : '未知';
+            }
+            
+            // 角色中文转换
+            function getRoleText(role) {
+                return role === 'main character' ? '主角' : 
+                       role === 'supporting character' ? '配角' : 
+                       role === 'antagonist' ? '反派' : '其他角色';
+            }
+
+            modal.innerHTML = `
+                <div class="character-modal-content">
+                    <div class="character-modal-header">
+                        <div class="character-modal-title">🎭 人物识别完成</div>
+                        <div class="character-modal-subtitle">成功识别到 ${characters.length} 个人物</div>
+                    </div>
+                    
+                    <div class="character-grid">
+                        ${characters.map(character => `
+                            <div class="character-card">
+                                <div class="character-avatar placeholder">
+                                    ${character.name.charAt(0)}
+                                </div>
+                                <div class="character-name">${character.name}</div>
+                                <div class="character-info">${character.appearance}</div>
+                                
+                                <div class="character-details">
+                                    <div class="character-detail-item">
+                                        <span class="character-detail-label">性别:</span>
+                                        <span class="character-detail-value">${getGenderText(character.gender)}</span>
+                                    </div>
+                                    <div class="character-detail-item">
+                                        <span class="character-detail-label">年龄:</span>
+                                        <span class="character-detail-value">${getAgeText(character.age_range)}</span>
+                                    </div>
+                                    <div class="character-detail-item">
+                                        <span class="character-detail-label">角色:</span>
+                                        <span class="character-detail-value">${getRoleText(character.role)}</span>
+                                    </div>
+                                    <div class="character-detail-item">
+                                        <span class="character-detail-label">性格:</span>
+                                        <span class="character-detail-value">${character.personality}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="character-modal-footer">
+                        <button class="character-modal-btn" onclick="closeCharacterModal()">
+                            开始生成人物画像 🎨
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            
+            // 点击背景关闭弹窗
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeCharacterModal();
+                }
+            });
+            
+
+
+        // 生成人物画像并更新显示 - 顺序生成，实时更新
+        async function generateCharacterImagesForDisplay(characters) {
+            try {
+                console.log('开始生成人物画像...');
+                
+                // 更新人物卡片显示生成状态
+                const characterCards = document.querySelectorAll('.character-display-card');
+                characterCards.forEach(card => {
+                    const avatar = card.querySelector('.character-display-avatar');
+                    avatar.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><div style="width: 20px; height: 20px; border: 2px solid rgba(255, 107, 53, 0.2); border-top: 2px solid #FF6B35; border-radius: 50%; animation: spin 1s linear infinite;"></div></div>';
+                });
+
+                // 调用后端API开始生成人物画像
+                const response = await fetch('http://localhost:8000/api/video/generate-character-images', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    console.log('人物画像生成任务已启动');
+                    
+                    // 开始轮询检查生成进度
+                    await pollCharacterImageProgress(characters);
+                } else {
+                    console.error('启动人物画像生成失败:', result.error);
+                    // 恢复原始头像
+                    characterCards.forEach((card, index) => {
+                        if (index < characters.length) {
+                            const avatar = card.querySelector('.character-display-avatar');
+                            avatar.innerHTML = characters[index].name.charAt(0);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('生成人物画像错误:', error);
+                // 恢复原始头像
+                const characterCards = document.querySelectorAll('.character-display-card');
+                characterCards.forEach((card, index) => {
+                    if (index < characters.length) {
+                        const avatar = card.querySelector('.character-display-avatar');
+                        avatar.innerHTML = characters[index].name.charAt(0);
+                    }
+                });
+            }
+        }
+
+        // 轮询检查人物画像生成进度
+        async function pollCharacterImageProgress(characters) {
+            const maxAttempts = 60; // 最多轮询60次（5分钟）
+            let attempts = 0;
+            
+            const pollInterval = setInterval(async () => {
+                attempts++;
+                console.log(`检查生成进度 (第${attempts}次)...`);
+                
+                try {
+                    const response = await fetch('http://localhost:8000/api/video/character-images/latest');
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        console.log(`生成进度: ${data.completed}/${data.total_characters} 完成`);
+                        
+                        // 更新人物卡片显示
+                        data.images.forEach(imageData => {
+                            // 使用更兼容的方法查找对应的字符卡片
+                            const characterCards = document.querySelectorAll('.character-display-card');
+                            let characterCard = null;
+                            
+                            for (let card of characterCards) {
+                                const nameElement = card.querySelector('.character-display-name');
+                                if (nameElement && nameElement.textContent === imageData.character_name) {
+                                    characterCard = card;
+                                    break;
+                                }
+                            }
+                            
+                            if (characterCard) {
+                                const avatar = characterCard.querySelector('.character-display-avatar');
+                                const nameElement = characterCard.querySelector('.character-display-name');
+                                
+                                if (imageData.status === 'success' && imageData.image_url) {
+                                    avatar.innerHTML = `<img src="${imageData.image_url}" alt="${imageData.character_name}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.parentElement.innerHTML='${imageData.character_name.charAt(0)}'">`;
+                                    nameElement.style.color = '#4CAF50'; // 绿色表示成功
+                                } else if (imageData.status === 'failed') {
+                                    avatar.innerHTML = imageData.character_name.charAt(0);
+                                    nameElement.style.color = '#FF6B35'; // 橙色表示失败
+                                    console.log(`人物 ${imageData.character_name} 图片生成失败: ${imageData.error_message}`);
+                                } else if (imageData.status === 'not_started') {
+                                    avatar.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;"><div style="width: 20px; height: 20px; border: 2px solid rgba(255, 107, 53, 0.2); border-top: 2px solid #FF6B35; border-radius: 50%; animation: spin 1s linear infinite;"></div></div>';
+                                    nameElement.style.color = '#FF6B35'; // 橙色表示等待中
+                                }
+                            }
+                        });
+                        
+                        // 检查是否全部完成
+                        if (data.completed + data.failed >= data.total_characters) {
+                            clearInterval(pollInterval);
+                            console.log('所有人物画像生成完成');
+                            
+                            // 显示完成统计
+                            const successCount = data.completed;
+                            const failedCount = data.failed;
+                            console.log(`生成结果: ${successCount} 成功, ${failedCount} 失败`);
+                        }
+                    } else {
+                        console.error('获取生成进度失败:', data.error);
+                    }
+                } catch (error) {
+                    console.error('轮询生成进度时发生错误:', error);
+                }
+                
+                // 检查是否超过最大尝试次数
+                if (attempts >= maxAttempts) {
+                    clearInterval(pollInterval);
+                    console.log('轮询超时，停止检查生成进度');
+                }
+            }, 5000); // 每5秒检查一次
+        }
+
+        // 显示人物画像结果
+        function showCharacterImagesResult(characters, results) {
+            const modal = document.querySelector('.character-modal');
+            if (!modal) return;
+
+            const content = modal.querySelector('.character-modal-content');
+            
+            // 创建人物画像网格
+            const characterGrid = characters.map((character, index) => {
+                const result = results.find(r => r.character_name === character.name);
+                const status = result ? result.status : 'unknown';
+                const imageUrl = result ? result.image_url : '';
+                
+                let avatarContent = '';
+                if (status === 'success' && imageUrl) {
+                    avatarContent = `<img src="${imageUrl}" alt="${character.name}" onerror="this.parentElement.innerHTML='${character.name.charAt(0)}'">`;
+                } else if (status === 'already_exists' && imageUrl) {
+                    avatarContent = `<img src="${imageUrl}" alt="${character.name}" onerror="this.parentElement.innerHTML='${character.name.charAt(0)}'">`;
+                } else {
+                    avatarContent = character.name.charAt(0);
+                }
+
+                return `
+                    <div class="character-card">
+                        <div class="character-avatar ${status === 'success' || status === 'already_exists' ? '' : 'placeholder'}">
+                            ${avatarContent}
+                        </div>
+                        <div class="character-name">${character.name}</div>
+                        <div class="character-info">${character.appearance}</div>
+                        
+                        <div class="character-details">
+                            <div class="character-detail-item">
+                                <span class="character-detail-label">状态:</span>
+                                <span class="character-detail-value" style="color: ${status === 'success' || status === 'already_exists' ? '#4CAF50' : '#FF6B35'}">
+                                    ${status === 'success' ? '✅ 生成成功' : 
+                                      status === 'already_exists' ? '⏭️ 已存在' : 
+                                      status === 'failed' ? '❌ 生成失败' : '⏳ 处理中'}
+                                </span>
+                            </div>
+                            <div class="character-detail-item">
+                                <span class="character-detail-label">性别:</span>
+                                <span class="character-detail-value">${character.gender === 'male' ? '男性' : character.gender === 'female' ? '女性' : '其他'}</span>
+                            </div>
+                            <div class="character-detail-item">
+                                <span class="character-detail-label">年龄:</span>
+                                <span class="character-detail-value">${character.age_range ? character.age_range.replace('s', '多岁') : '未知'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            content.innerHTML = `
+                <div class="character-modal-header">
+                    <div class="character-modal-title">🎨 人物画像完成</div>
+                    <div class="character-modal-subtitle">成功为 ${characters.length} 个人物生成画像</div>
+                </div>
+                
+                <div class="character-grid">
+                    ${characterGrid}
+                </div>
+                
+                <div class="character-modal-footer">
+                    <button class="character-modal-btn" onclick="closeCharacterModal()">
+                        继续下一步 🚀
+                    </button>
+                </div>
+            `;
+        }
+
+        // 添加页面加载动画
+        document.addEventListener('DOMContentLoaded', function() {
+            // 为各个部分添加动画延迟
+            const sections = document.querySelectorAll('.prompt-section, .aspect-ratio-section, .style-section');
+            sections.forEach((section, index) => {
+                section.style.animation = `fadeIn 0.8s ease-out ${index * 0.2}s both`;
+            });
+
+            // 为步骤指示器添加动画
+            const steps = document.querySelectorAll('.step');
+            steps.forEach((step, index) => {
+                step.style.animation = `slideInRight 0.6s ease-out ${index * 0.1}s both`;
+            });
+
+            // 添加输入框焦点效果
+            const inputs = document.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'scale(1.02)';
+                });
+                
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'scale(1)';
+                });
+            });
+
+            // 添加按钮点击效果
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // 创建涟漪效果
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.width = ripple.style.height = size + 'px';
+                    ripple.style.left = x + 'px';
+                    ripple.style.top = y + 'px';
+                    ripple.classList.add('ripple');
+                    
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                });
+            });
+        });
+        
+        // 测试FFmpeg是否可用
+        async function testFFmpeg() {
+            console.log('=== FFmpeg Availability Test ===');
+            console.log('window.loadFFmpegPromise:', window.loadFFmpegPromise);
+            
+            try {
+                const ffmpeg = await window.loadFFmpegPromise;
+                console.log('✅ FFmpeg loaded successfully:', ffmpeg);
+                console.log('FFmpeg.createFFmpeg:', typeof ffmpeg.createFFmpeg);
+                return true;
+            } catch (error) {
+                console.log('❌ FFmpeg load failed:', error);
+                return false;
+            }
+        }
+        
+        // 页面加载后测试FFmpeg
+        setTimeout(testFFmpeg, 2000);
+        setTimeout(testFFmpeg, 5000);
+        
+        function showDownloadOptions(data) {
+            // 创建下载选项窗口
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.background = 'rgba(0,0,0,0.8)';
+            modal.style.zIndex = '10000';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            
+            const content = document.createElement('div');
+            content.style.background = 'var(--card-bg)';
+            content.style.padding = '2rem';
+            content.style.borderRadius = '16px';
+            content.style.maxWidth = '800px';
+            content.style.maxHeight = '80vh';
+            content.style.overflow = 'auto';
+            content.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+            
+            content.innerHTML = `
+                <h2 style="color: var(--primary-color); margin-bottom: 1rem;">🎬 Video Download Options</h2>
+                <div style="margin-bottom: 1rem;">
+                    <p><strong>Total Shots:</strong> ${data.total_shots}</p>
+                    <p><strong>Total Duration:</strong> ${data.total_duration} seconds</p>
+                    <p><strong>Status:</strong> All videos ready for download</p>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0;">
+                    <button onclick="downloadCombinedVideoDirect()" style="background: var(--primary-color); color: #fff; border: none; border-radius: 8px; padding: 1rem; cursor: pointer; font-size: 1rem;">
+                        🎬 Download Combined Video
+                    </button>
+                    <button onclick="downloadIndividualVideos(${JSON.stringify(data).replace(/"/g, '&quot;')})" style="background: var(--accent-color); color: #fff; border: none; border-radius: 8px; padding: 1rem; cursor: pointer; font-size: 1rem;">
+                        📥 Download Individual Videos
+                    </button>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <button onclick="tryBrowserCombine(${JSON.stringify(data).replace(/"/g, '&quot;')})" style="background: #666; color: #fff; border: none; border-radius: 8px; padding: 0.8rem; cursor: pointer; font-size: 0.9rem; width: 100%;">
+                        🔗 Try Browser Combine (Experimental)
+                    </button>
+                </div>
+                
+                <div style="background: rgba(51, 51, 51, 0.6); padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 0.5rem;">💡 Tips:</h4>
+                    <ul style="margin: 0; padding-left: 1.5rem;">
+                        <li>Individual videos: Download each shot separately</li>
+                        <li>Browser combine: Try to combine videos in your browser (may not work due to CDN restrictions)</li>
+                        <li>Use video editing software to combine the individual videos</li>
+                    </ul>
+                </div>
+                
+                <button onclick="this.parentElement.parentElement.remove()" style="background: #666; color: #fff; border: none; border-radius: 8px; padding: 12px 24px; cursor: pointer; margin-top: 1rem;">
+                    Close
+                </button>
+            `;
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            // 点击背景关闭
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
+        }
+        
+        function downloadIndividualVideos(data) {
+            // 下载所有单独的视频
+            data.videos.forEach((video, index) => {
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.href = video.video_url;
+                    link.download = `shot_${video.shot_number}.mp4`;
+                    link.target = '_blank';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }, index * 500); // 每500ms下载一个，避免浏览器阻止
+            });
+            
+            // 关闭模态框
+            document.querySelector('div[style*="z-index: 10000"]').remove();
+            
+            alert(`🎬 Downloading ${data.total_shots} individual videos...\n\nPlease use video editing software to combine them into a single video.`);
+        }
+        
+        async function downloadCombinedVideoDirect() {
+            try {
+                // 显示进度模态框
+                const progressModal = document.createElement('div');
+                progressModal.style.position = 'fixed';
+                progressModal.style.top = '0';
+                progressModal.style.left = '0';
+                progressModal.style.width = '100%';
+                progressModal.style.height = '100%';
+                progressModal.style.background = 'rgba(0,0,0,0.8)';
+                progressModal.style.zIndex = '10002';
+                progressModal.style.display = 'flex';
+                progressModal.style.alignItems = 'center';
+                progressModal.style.justifyContent = 'center';
+                
+                const progressContent = document.createElement('div');
+                progressContent.style.background = 'var(--card-bg)';
+                progressContent.style.padding = '2rem';
+                progressContent.style.borderRadius = '16px';
+                progressContent.style.maxWidth = '500px';
+                progressContent.style.textAlign = 'center';
+                progressContent.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+                
+                progressContent.innerHTML = `
+                    <h3 style="color: var(--primary-color); margin-bottom: 1rem;">🎬 Server-Side Video Combination</h3>
+                    <div id="server-progress" style="margin: 1rem 0;">
+                        <div style="color: #888;">Initializing...</div>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                        <div id="server-progress-bar" style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.3s;"></div>
+                    </div>
+                `;
+                
+                progressModal.appendChild(progressContent);
+                document.body.appendChild(progressModal);
+                
+                const progressDiv = document.getElementById('server-progress');
+                const progressBar = document.getElementById('server-progress-bar');
+                
+                // 调用后端代理合并
+                progressDiv.innerHTML = '<div style="color: #888;">Downloading and combining videos...</div>';
+                progressBar.style.width = '30%';
+                
+                const res = await fetch('http://localhost:8000/api/video/proxy-combine', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await res.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error);
+                }
+                
+                progressDiv.innerHTML = '<div style="color: #888;">Preparing download...</div>';
+                progressBar.style.width = '80%';
+                
+                // 等待一下让用户看到进度
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                progressDiv.innerHTML = '<div style="color: #4CAF50;">✅ Video combination completed!</div>';
+                progressBar.style.width = '100%';
+                
+                // 直接下载合并后的文件
+                const downloadUrl = `http://localhost:8000/download/combined_video.mp4`;
+                const downloadLink = document.createElement('a');
+                downloadLink.href = downloadUrl;
+                downloadLink.download = `combined_video_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.mp4`;
+                downloadLink.style.display = 'none';
+                document.body.appendChild(downloadLink);
+                
+                // 自动下载
+                downloadLink.click();
+                
+                // 清理
+                setTimeout(() => {
+                    document.body.removeChild(downloadLink);
+                    if (document.body.contains(progressModal)) {
+                        document.body.removeChild(progressModal);
+                    }
+                }, 1000);
+                
+                alert(`🎉 Video combination successful!\n\nTotal duration: ${data.total_duration} seconds\nShots combined: ${data.total_shots}\nFile size: ${(data.file_size / 1024 / 1024).toFixed(2)} MB\n\nVideo has been downloaded automatically.`);
+                
+            } catch (error) {
+                console.error('Server-side video combination error:', error);
+                
+                // 移除进度模态框
+                const progressModal = document.querySelector('div[style*="z-index: 10002"]');
+                if (progressModal) {
+                    progressModal.remove();
+                }
+                
+                // 显示错误信息
+                alert(`❌ Server-side video combination failed: ${error.message}\n\nPlease try the "Download Individual Videos" option instead.`);
+            }
+        }
+        
+        function tryBrowserCombine(data) {
+            // 尝试在浏览器中合并视频
+            downloadCombinedVideoWithFFmpeg(data);
+        }
+        
+        async function downloadCombinedVideoWithFFmpeg(data) {
+            try {
+                // 显示进度模态框
+                const progressModal = document.createElement('div');
+                progressModal.style.position = 'fixed';
+                progressModal.style.top = '0';
+                progressModal.style.left = '0';
+                progressModal.style.width = '100%';
+                progressModal.style.height = '100%';
+                progressModal.style.background = 'rgba(0,0,0,0.8)';
+                progressModal.style.zIndex = '10001';
+                progressModal.style.display = 'flex';
+                progressModal.style.alignItems = 'center';
+                progressModal.style.justifyContent = 'center';
+                
+                const progressContent = document.createElement('div');
+                progressContent.style.background = 'var(--card-bg)';
+                progressContent.style.padding = '2rem';
+                progressContent.style.borderRadius = '16px';
+                progressContent.style.maxWidth = '500px';
+                progressContent.style.textAlign = 'center';
+                progressContent.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+                
+                progressContent.innerHTML = `
+                    <h3 style="color: var(--primary-color); margin-bottom: 1rem;">🎬 Browser Video Combination</h3>
+                    <div id="browser-progress" style="margin: 1rem 0;">
+                        <div style="color: #888;">Initializing...</div>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                        <div id="browser-progress-bar" style="width: 0%; height: 100%; background: var(--primary-color); transition: width 0.3s;"></div>
+                    </div>
+                `;
+                
+                progressModal.appendChild(progressContent);
+                document.body.appendChild(progressModal);
+                
+                const progressDiv = document.getElementById('browser-progress');
+                const progressBar = document.getElementById('browser-progress-bar');
+                
+                // 检查 SharedArrayBuffer 支持
+                if (typeof SharedArrayBuffer === 'undefined') {
+                    throw new Error('SharedArrayBuffer not supported. Please use individual download option.');
+                }
+                
+                // 加载 FFmpeg
+                progressDiv.innerHTML = '<div style="color: #888;">Loading FFmpeg...</div>';
+                progressBar.style.width = '10%';
+                
+                let ffmpeg;
+                try {
+                    ffmpeg = await window.loadFFmpegPromise;
+                } catch (error) {
+                    throw new Error('Failed to load FFmpeg. Please use individual download option.');
+                }
+                
+                const { createFFmpeg } = ffmpeg;
+                const ffmpegInstance = createFFmpeg({ 
+                    log: true,
+                    corePath: 'https://unpkg.com/@ffmpeg/core@0.9.0/dist/ffmpeg-core.js'
+                });
+                
+                progressDiv.innerHTML = '<div style="color: #888;">Initializing FFmpeg...</div>';
+                progressBar.style.width = '20%';
+                
+                await ffmpegInstance.load();
+                
+                progressDiv.innerHTML = '<div style="color: #888;">Downloading videos...</div>';
+                progressBar.style.width = '30%';
+                
+                // 下载视频
+                const videoFiles = [];
+                for (let i = 0; i < data.videos.length; i++) {
+                    const video = data.videos[i];
+                    progressDiv.innerHTML = `<div style="color: #888;">Downloading video ${i+1}/${data.videos.length}...</div>`;
+                    progressBar.style.width = `${30 + (i / data.videos.length) * 40}%`;
+                    
+                    try {
+                        const response = await fetch(video.video_url);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        const blob = await response.blob();
+                        const arrayBuffer = await blob.arrayBuffer();
+                        const fileName = `video_${i+1}.mp4`;
+                        
+                        ffmpegInstance.FS('writeFile', fileName, new Uint8Array(arrayBuffer));
+                        videoFiles.push(fileName);
+                        
+                    } catch (error) {
+                        console.error(`Failed to download video ${i+1}:`, error);
+                        throw new Error(`Failed to download video ${i+1}: ${error.message}`);
+                    }
+                }
+                
+                progressDiv.innerHTML = '<div style="color: #888;">Combining videos...</div>';
+                progressBar.style.width = '80%';
+                
+                // 创建视频列表
+                const videoList = videoFiles.map(file => `file '${file}'`).join('\n');
+                ffmpegInstance.FS('writeFile', 'video_list.txt', videoList);
+                
+                // 合并视频
+                await ffmpegInstance.run(
+                    '-f', 'concat',
+                    '-safe', '0',
+                    '-i', 'video_list.txt',
+                    '-c', 'copy',
+                    'combined_video.mp4'
+                );
+                
+                progressDiv.innerHTML = '<div style="color: #888;">Finalizing...</div>';
+                progressBar.style.width = '90%';
+                
+                // 读取合并后的视频
+                const combinedVideoData = ffmpegInstance.FS('readFile', 'combined_video.mp4');
+                const combinedBlob = new Blob([combinedVideoData.buffer], { type: 'video/mp4' });
+                
+                progressBar.style.width = '100%';
+                progressDiv.innerHTML = '<div style="color: #4CAF50;">✅ Video combination completed!</div>';
+                
+                // 创建下载链接
+                const downloadUrl = URL.createObjectURL(combinedBlob);
+                const downloadLink = document.createElement('a');
+                downloadLink.href = downloadUrl;
+                downloadLink.download = `combined_video_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.mp4`;
+                downloadLink.style.display = 'none';
+                document.body.appendChild(downloadLink);
+                
+                // 自动下载
+                downloadLink.click();
+                
+                // 清理
+                setTimeout(() => {
+                    URL.revokeObjectURL(downloadUrl);
+                    document.body.removeChild(downloadLink);
+                    if (document.body.contains(progressModal)) {
+                        document.body.removeChild(progressModal);
+                    }
+                }, 1000);
+                
+                alert(`🎉 Video combination successful!\n\nTotal duration: ${data.total_duration} seconds\nShots combined: ${data.total_shots}\n\nVideo has been downloaded automatically.`);
+                
+            } catch (error) {
+                console.error('Browser video combination error:', error);
+                
+                // 移除进度模态框
+                const progressModal = document.querySelector('div[style*="z-index: 10001"]');
+                if (progressModal) {
+                    progressModal.remove();
+                }
+                
+                // 显示错误信息
+                alert(`❌ Browser video combination failed: ${error.message}\n\nPlease use the "Download Individual Videos" option instead.`);
+            }
+        }
+        
+        function showManualDownloadOption(data) {
+            // 创建手动下载选项窗口
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.background = 'rgba(0,0,0,0.8)';
+            modal.style.zIndex = '10000';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+            
+            const content = document.createElement('div');
+            content.style.background = 'var(--card-bg)';
+            content.style.padding = '2rem';
+            content.style.borderRadius = '16px';
+            content.style.maxWidth = '800px';
+            content.style.maxHeight = '80vh';
+            content.style.overflow = 'auto';
+            content.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+            
+            content.innerHTML = `
+                <h2 style="color: var(--primary-color); margin-bottom: 1rem;">📥 Manual Download Option</h2>
+                <div style="margin-bottom: 1rem; color: #888;">
+                    <p>FFmpeg is not available for automatic video combination.</p>
+                    <p>You can manually download each video and combine them using video editing software.</p>
+                </div>
+                
+                <h3 style="color: var(--primary-color); margin: 1.5rem 0 1rem 0;">Video Download Links:</h3>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    ${data.videos.map(video => `
+                        <div style="background: rgba(51, 51, 51, 0.6); padding: 1rem; margin: 0.5rem 0; border-radius: 8px;">
+                            <p><strong>Shot ${video.shot_number}:</strong></p>
+                            <p style="color: #888; font-size: 0.9rem;">${video.shot_content.substring(0, 100)}...</p>
+                            <p><strong>Style:</strong> ${video.style} | <strong>Ratio:</strong> ${video.aspect_ratio}</p>
+                            <a href="${video.video_url}" target="_blank" download style="color: var(--primary-color); text-decoration: none; display: inline-block; margin-top: 0.5rem;">
+                                📥 Download Shot ${video.shot_number}
+                            </a>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <h3 style="color: var(--primary-color); margin: 1.5rem 0 1rem 0;">How to Combine Videos:</h3>
+                <div style="background: rgba(51, 51, 51, 0.6); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <ol style="margin: 0; padding-left: 1.5rem;">
+                        <li>Download all video files above</li>
+                        <li>Use video editing software like:
+                            <ul style="margin: 0.5rem 0;">
+                                <li><a href="https://www.onlinevideoconverter.com/" target="_blank" style="color: var(--primary-color);">Online Video Converter</a></li>
+                                <li><a href="https://www.youcompress.com/" target="_blank" style="color: var(--primary-color);">YouCompress</a></li>
+                                <li><a href="https://www.media.io/" target="_blank" style="color: var(--primary-color);">Media.io</a></li>
+                            </ul>
+                        </li>
+                        <li>Or use local software like FFmpeg, Adobe Premiere, or DaVinci Resolve</li>
+                    </ol>
+                </div>
+                
+                <div style="margin-top: 2rem; text-align: center;">
+                    <button onclick="this.closest('div[style*=\"position: fixed\"]').remove()" style="background: var(--primary-color); color: #000; padding: 1rem 2rem; border: none; border-radius: 8px; cursor: pointer;">
+                        Close
+                    </button>
+                </div>
+            `;
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            // 点击背景关闭
+            modal.onclick = function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            };
+        }
+        
+        // 当 style-section 或 digital-human-section 隐藏时，隐藏按钮
+        // 监听 style-section 和 digital-human-section 的 display 变化
+        const observer = new MutationObserver(() => {
+            const styleVisible = document.getElementById('style-section').style.display !== 'none';
+            const digitalVisible = document.getElementById('digital-human-section').style.display !== 'none';
+            if (styleVisible && digitalVisible) {
+                showGenerateVideoButton();
+            } else {
+                hideGenerateVideoButton();
+            }
+        });
+        observer.observe(document.getElementById('style-section'), { attributes: true, attributeFilter: ['style'] });
+        observer.observe(document.getElementById('digital-human-section'), { attributes: true, attributeFilter: ['style'] });
+    </script>
+</body>
+</html>

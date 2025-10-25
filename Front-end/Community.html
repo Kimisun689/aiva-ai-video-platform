@@ -1,0 +1,707 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI视频生成平台 - Community</title>
+    <style>
+        :root {
+            --primary-color: #FF6B35;
+            --secondary-color: #1f3857;
+            --background-gradient: linear-gradient(135deg, var(--secondary-color) 0%, #0e1825 100%);
+            --card-bg: rgba(26, 26, 26, 0.95);
+            --text-color: #fff;
+            --hover-effect: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --accent-color: #4ECDC4;
+            --success-color: #45B7D1;
+            --warning-color: #FFA726;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'PingFang SC', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background-gradient);
+            color: var(--text-color);
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* 动态背景 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(255, 107, 53, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(78, 205, 196, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(69, 183, 209, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: var(--card-bg);
+            padding: 1.5rem 1rem;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+            position: fixed;
+            height: 100vh;
+            transition: var(--hover-effect);
+            z-index: 100;
+        }
+
+        .sidebar h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 0 20px rgba(255, 107, 53, 0.7);
+            font-weight: 700;
+            text-align: center;
+            padding: 0.8rem 0;
+            background: linear-gradient(45deg, #FF6B35, #FF8E53);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+
+        .sidebar h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(45deg, #FF6B35, #FF8E53);
+            border-radius: 2px;
+        }
+
+        .menu-item {
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: var(--hover-effect);
+            background: rgba(51, 51, 51, 0.6);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255, 107, 53, 0.8), transparent);
+            transition: var(--hover-effect);
+            z-index: 0;
+        }
+
+        .menu-item:hover {
+            transform: translateX(5px) scale(1.02);
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.4);
+            background: rgba(51, 51, 51, 0.8);
+        }
+
+        .menu-item:hover::before {
+            width: 100%;
+        }
+
+        .menu-item span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .menu-item.active {
+            background: linear-gradient(45deg, rgba(255, 107, 53, 0.2), rgba(255, 107, 53, 0.1));
+            border-color: rgba(255, 107, 53, 0.3);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem 3rem;
+            margin-left: 240px;
+            overflow-y: auto;
+            height: 100vh;
+            scroll-behavior: smooth;
+            position: relative;
+        }
+
+        /* 社区内容区域 */
+        .community-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 0;
+        }
+
+        .community-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .community-header h2 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #FF6B35, #FF8E53, #4ECDC4);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 30px rgba(255, 107, 53, 0.5);
+        }
+
+        .community-header p {
+            font-size: 1.2rem;
+            color: #ccc;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        /* 社区卡片网格 */
+        .community-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .community-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            transition: var(--hover-effect);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .community-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(45deg, #FF6B35, #FF8E53);
+            transform: scaleX(0);
+            transition: var(--hover-effect);
+        }
+
+        .community-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 107, 53, 0.3);
+        }
+
+        .community-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #FF6B35, #FF8E53);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .user-info h4 {
+            margin: 0;
+            color: #FF6B35;
+            font-size: 1.1rem;
+        }
+
+        .user-info p {
+            margin: 0;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .card-content {
+            margin-bottom: 1.5rem;
+        }
+
+        .card-content h3 {
+            color: #fff;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .card-content p {
+            color: #ccc;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .video-preview {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(45deg, rgba(255, 107, 53, 0.1), rgba(78, 205, 196, 0.1));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-preview::before {
+            content: '▶';
+            font-size: 3rem;
+            color: rgba(255, 255, 255, 0.3);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--hover-effect);
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .like-btn {
+            background: rgba(255, 107, 53, 0.2);
+            color: #FF6B35;
+            border: 1px solid rgba(255, 107, 53, 0.3);
+        }
+
+        .like-btn:hover {
+            background: rgba(255, 107, 53, 0.3);
+            transform: scale(1.05);
+        }
+
+        .share-btn {
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ECDC4;
+            border: 1px solid rgba(78, 205, 196, 0.3);
+        }
+
+        .share-btn:hover {
+            background: rgba(78, 205, 196, 0.3);
+            transform: scale(1.05);
+        }
+
+        .comment-btn {
+            background: rgba(69, 183, 209, 0.2);
+            color: #45B7D1;
+            border: 1px solid rgba(69, 183, 209, 0.3);
+        }
+
+        .comment-btn:hover {
+            background: rgba(69, 183, 209, 0.3);
+            transform: scale(1.05);
+        }
+
+        /* 浮动添加按钮 */
+        .add-post-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #FF6B35, #FF8E53);
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: var(--hover-effect);
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .add-post-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 12px 35px rgba(255, 107, 53, 0.6);
+        }
+
+        /* 统计卡片 */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            transition: var(--hover-effect);
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #FF6B35, #FF8E53);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #ccc;
+            font-size: 1rem;
+        }
+
+        /* 动画 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 200px;
+            }
+            
+            .main-content {
+                margin-left: 200px;
+                padding: 1rem;
+            }
+            
+            .community-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .community-header h2 {
+                font-size: 2rem;
+            }
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #FF6B35, #FF8E53);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #FF8E53, #FF6B35);
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1>AIVA</h1>
+        <div class="menu-item" onclick="window.location.href='../Front-end/index.html'">🏠 Home</div>
+        <div class="menu-item" onclick="window.location.href='../Front-end/Generate.html'">🎥 Generate</div>
+        <div class="menu-item active" onclick="window.location.href='../Front-end/Community.html'">👥 Community</div>
+        <div class="menu-item" onclick="window.location.href='../Front-end/DigitalAssets.html'">💎 Digital Assets</div>
+        <div class="menu-item" onclick="window.location.href='../Front-end/MyAccount.html'">👤 My Account</div>
+    </div>
+    
+    <div class="main-content">
+        <div class="community-container">
+            <!-- 页面标题 -->
+            <div class="community-header">
+                <h2>Community Hub</h2>
+                <p>Discover amazing AI-generated videos from our creative community. Share your creations and get inspired by others!</p>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-number">1,247</div>
+                    <div class="stat-label">Videos Created</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">856</div>
+                    <div class="stat-label">Active Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">3,421</div>
+                    <div class="stat-label">Total Likes</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">128</div>
+                    <div class="stat-label">Today's Posts</div>
+                </div>
+            </div>
+
+            <!-- 社区内容网格 -->
+            <div class="community-grid">
+                <!-- 社区卡片 1 -->
+                <div class="community-card">
+                    <div class="card-header">
+                        <div class="user-avatar">A</div>
+                        <div class="user-info">
+                            <h4>Alex Chen</h4>
+                            <p>2 hours ago</p>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <h3>Epic Space Adventure</h3>
+                        <p>Just created this amazing space exploration video using AIVA! The AI really captured the cosmic atmosphere perfectly. 🚀✨</p>
+                        <div class="video-preview">
+                            <p>Video Preview</p>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn like-btn">❤️ 42</button>
+                        <button class="action-btn share-btn">📤 Share</button>
+                        <button class="action-btn comment-btn">💬 8</button>
+                    </div>
+                </div>
+
+                <!-- 社区卡片 2 -->
+                <div class="community-card">
+                    <div class="card-header">
+                        <div class="user-avatar">S</div>
+                        <div class="user-info">
+                            <h4>Sarah Kim</h4>
+                            <p>5 hours ago</p>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <h3>Magical Forest Journey</h3>
+                        <p>My first attempt with AIVA! Created a beautiful forest scene with magical creatures. The lighting effects are incredible! 🌲✨</p>
+                        <div class="video-preview">
+                            <p>Video Preview</p>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn like-btn">❤️ 67</button>
+                        <button class="action-btn share-btn">📤 Share</button>
+                        <button class="action-btn comment-btn">💬 12</button>
+                    </div>
+                </div>
+
+                <!-- 社区卡片 3 -->
+                <div class="community-card">
+                    <div class="card-header">
+                        <div class="user-avatar">M</div>
+                        <div class="user-info">
+                            <h4>Mike Johnson</h4>
+                            <p>1 day ago</p>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <h3>Cyberpunk City</h3>
+                        <p>Futuristic cityscape with neon lights and flying cars. AIVA's attention to detail is mind-blowing! 🌃🤖</p>
+                        <div class="video-preview">
+                            <p>Video Preview</p>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn like-btn">❤️ 89</button>
+                        <button class="action-btn share-btn">📤 Share</button>
+                        <button class="action-btn comment-btn">💬 15</button>
+                    </div>
+                </div>
+
+                <!-- 社区卡片 4 -->
+                <div class="community-card">
+                    <div class="card-header">
+                        <div class="user-avatar">E</div>
+                        <div class="user-info">
+                            <h4>Emma Wilson</h4>
+                            <p>2 days ago</p>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <h3>Ocean Depths</h3>
+                        <p>Underwater exploration with bioluminescent creatures. The color palette is absolutely stunning! 🌊🐠</p>
+                        <div class="video-preview">
+                            <p>Video Preview</p>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn like-btn">❤️ 156</button>
+                        <button class="action-btn share-btn">📤 Share</button>
+                        <button class="action-btn comment-btn">💬 23</button>
+                    </div>
+                </div>
+
+                <!-- 社区卡片 5 -->
+                <div class="community-card">
+                    <div class="card-header">
+                        <div class="user-avatar">D</div>
+                        <div class="user-info">
+                            <h4>David Lee</h4>
+                            <p>3 days ago</p>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <h3>Mountain Sunrise</h3>
+                        <p>Peaceful mountain landscape at dawn. The way AIVA captured the golden hour lighting is just perfect! ⛰️🌅</p>
+                        <div class="video-preview">
+                            <p>Video Preview</p>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn like-btn">❤️ 203</button>
+                        <button class="action-btn share-btn">📤 Share</button>
+                        <button class="action-btn comment-btn">💬 31</button>
+                    </div>
+                </div>
+
+                <!-- 社区卡片 6 -->
+                <div class="community-card">
+                    <div class="card-header">
+                        <div class="user-avatar">L</div>
+                        <div class="user-info">
+                            <h4>Lisa Park</h4>
+                            <p>4 days ago</p>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <h3>Steampunk Workshop</h3>
+                        <p>Intricate mechanical workshop with gears and steam. The level of detail in the machinery is incredible! ⚙️🔧</p>
+                        <div class="video-preview">
+                            <p>Video Preview</p>
+                        </div>
+                    </div>
+                    <div class="card-actions">
+                        <button class="action-btn like-btn">❤️ 134</button>
+                        <button class="action-btn share-btn">📤 Share</button>
+                        <button class="action-btn comment-btn">💬 19</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 浮动添加按钮 -->
+        <button class="add-post-btn pulse" onclick="showAddPostModal()">+</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 添加卡片悬停效果
+            const cards = document.querySelectorAll('.community-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
+
+            // 添加按钮点击效果
+            const actionBtns = document.querySelectorAll('.action-btn');
+            actionBtns.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 150);
+                });
+            });
+
+            // 统计数字动画
+            const statNumbers = document.querySelectorAll('.stat-number');
+            statNumbers.forEach(stat => {
+                const finalNumber = parseInt(stat.textContent.replace(/,/g, ''));
+                let currentNumber = 0;
+                const increment = finalNumber / 50;
+                const timer = setInterval(() => {
+                    currentNumber += increment;
+                    if (currentNumber >= finalNumber) {
+                        currentNumber = finalNumber;
+                        clearInterval(timer);
+                    }
+                    stat.textContent = Math.floor(currentNumber).toLocaleString();
+                }, 30);
+            });
+        });
+
+        function showAddPostModal() {
+            alert('Add Post feature coming soon! 🚀');
+        }
+    </script>
+</body>
+</html>

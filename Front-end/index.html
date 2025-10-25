@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<!-- 定义HTML文档类型和语言 -->
+<html lang="zh-CN">
+<head>
+    <!-- 基础元数据 -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Video Creater</title>
+    <meta name="description" content="All-in-one AI video creation platform offering video editing, music library, voiceover, and subtitle generation features">
+    
+    <!-- 引入Font Awesome图标库和Google字体 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;7 00&display=swap" rel="stylesheet">
+    
+    <!-- 内联CSS样式 -->
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #e47d1d; 
+            --dark-color: #1b263b;
+            --light-color: #f8f9fa;
+        }
+        
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideInLeft {
+            0% { opacity: 0; transform: translateX(-20px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        
+        body {
+            font-family: 'Poppins', 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.6;
+        }
+        
+        .side-menu {
+            position: fixed;
+            left: -240px;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: rgba(27, 38, 59, 0.9);
+            color: white;
+            transition: left 0.3s ease;
+            z-index: 1000;
+            padding: 20px 0;
+            backdrop-filter: blur(8px);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .side-menu:hover {
+            left: 0;
+        }
+        
+        .side-menu ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .side-menu li a {
+            display: block;
+            padding: 12px 20px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .side-menu li a:hover {
+            background: rgba(255,255,255,0.1);
+            border-left: 3px solid var(--accent-color);
+            padding-left: 25px;
+        }
+        
+        .side-menu li i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .hero {
+            background: url('https://vcg03.cfp.cn/creative/vcg/800/new/VCG211469741377.gif') center/cover no-repeat;
+            color: white;
+            text-align: center;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            animation: fadeInUp 1s ease-out;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin-bottom: 30px;
+            animation: fadeInUp 1s ease-out 0.2s forwards;
+            opacity: 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: var(--accent-color);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            animation: fadeInUp 1s ease-out 0.4s forwards;
+            opacity: 0;
+            box-shadow: 0 4px 15px rgba(227, 113, 14, 0.4);
+        }
+        
+        .cta-button:hover {
+            background: #e47d12; /* 更深的蓝绿色 */
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgb(244, 143, 49);
+        }
+        
+        .features {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 80px 20px;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            width: 250px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h3 {
+            margin: 15px 0;
+            color: var(--dark-color);
+        }
+        
+        footer {
+            background: var(--dark-color);
+            color: white;
+            text-align: center;
+            padding: 30px;
+            margin-top: auto;
+            animation: fadeInUp 1s ease-out;
+        }
+    </style>
+    <!-- 登录按钮样式 -->
+    <style>
+        .login-btn-fixed {
+            position: fixed;
+            top: 32px;
+            right: 48px;
+            z-index: 2000;
+            background: var(--primary-color);
+            color: #fff;
+            border: none;
+            border-radius: 24px;
+            padding: 12px 32px;
+            font-size: 1rem;
+            font-weight: 600;
+            box-shadow: 0 2px 12px rgba(67,97,238,0.12);
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            letter-spacing: 0.5px;
+        }
+        .login-btn-fixed:hover {
+            background: var(--accent-color);
+            color: #fff;
+            box-shadow: 0 4px 24px rgba(228,125,29,0.18);
+        }
+    </style>
+</head>
+<body>
+    <!-- 侧边导航菜单 -->
+    <div class="side-menu">
+        <ul>
+            <li><a href="/music-library"><i class="fas fa-music"></i> Home</a></li>
+            <li><a href="/voice-over"><i class="fas fa-microphone"></i> Video Generation</a></li>
+            <li><a href="/subtitles"><i class="fas fa-closed-captioning"></i> Contact Us</a></li>
+            <li><a href="/export"><i class="fas fa-download"></i> My Account</a></li>
+        </ul>
+    </div>
+
+    <!-- 登录按钮 -->
+    <button class="login-btn-fixed" onclick="window.location.href='login.html'">
+        <i class="fas fa-user-circle" style="margin-right:8px;"></i>Login
+    </button>
+
+    <!-- Main Title Section -->
+    <div class="hero">
+        <h1>AI Video Creation Platform</h1>
+        <p>Create professional-grade video content effortlessly with advanced AI technology</p>
+        <a href="../Front-end/Generate.html" class="cta-button">Start Creating Now</a>
+    </div>
+
+    <!-- Features Section -->
+
+
+
+
+
+    <!-- Features Section -->
+    <div class="features" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); padding: 60px 0; position: relative; overflow: hidden;">
+        <!-- Animated Background Elements -->
+        <div class="animated-bg">
+            <div class="circle" style="position: absolute; width: 300px; height: 300px; background: rgba(255,255,255,0.05); border-radius: 50%; top: -150px; right: -150px; animation: float 6s infinite ease-in-out;"></div>
+            <div class="circle" style="position: absolute; width: 200px; height: 200px; background: rgba(255,255,255,0.03); border-radius: 50%; bottom: -100px; left: -100px; animation: float 8s infinite ease-in-out;"></div>
+        </div>
+
+        <!-- Feature Cards Section -->
+        <div class="feature-cards-container" style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; max-width: 1200px; margin: 0 auto;">
+            <div class="feature-card" data-aos="zoom-in" data-aos-delay="100" data-aos-duration="800" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15); transition: all 0.3s ease; flex: 1 1 23%; min-width: 250px;">
+                <i class="fas fa-video feature-icon" style="color: #ff6b6b;"></i>
+                <h3 style="color: white;">Intelligent Video Editing</h3>
+                <p style="color: rgba(255,255,255,0.8);">Revolutionary AI video editing technology supports smart clipping, automatic transitions, and scene recognition. Through deep learning algorithms, it automatically optimizes video color, stabilizes footage, and removes noise, bringing your video works to professional standards. Supports 4K/8K ultra-high-definition video processing, providing rich effect templates and creative filters, making video creation unprecedentedly simple.</p>
+                <div class="feature-overlay" style="background: rgba(255,255,255,0.1);">
+                    <a href="/video-editor" class="feature-link" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #ff6b6b 0%, #ff4757 100%); color: white; border-radius: 30px; text-decoration: none; font-weight: 500; box-shadow: 0 4px 15px rgba(255,107,107,0.3); transition: all 0.3s ease;">Try Now <i class="fas fa-arrow-right" style="margin-left: 8px;"></i></a>
+                </div>
+            </div>
+
+            <div class="feature-card" data-aos="zoom-in" data-aos-delay="200" data-aos-duration="800" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15); transition: all 0.3s ease; flex: 1 1 23%; min-width: 250px;">
+                <i class="fas fa-music feature-icon" style="color: #4ecdc4;"></i>
+                <h3 style="color: white;">Massive Music Library</h3>
+                <p style="color: rgba(255,255,255,0.8);">With over 1 million licensed music tracks covering various genres including pop, classical, electronic, and rock. The intelligent scoring system automatically recommends the best background music based on video content, supporting precise synchronization between music rhythm and video scenes. Provides professional-level audio editing tools including volume adjustment, fade in/out, and sound effect layering, making your video audio more perfect.</p>
+                <div class="feature-overlay" style="background: rgba(255,255,255,0.1);">
+                    <a href="/music-library" class="feature-link" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #4ecdc4 0%, #48dbfb 100%); color: white; border-radius: 30px; text-decoration: none; font-weight: 500; box-shadow: 0 4px 15px rgba(78,205,196,0.3); transition: all 0.3s ease;">Explore Music <i class="fas fa-arrow-right" style="margin-left: 8px;"></i></a>
+                </div>
+            </div>
+
+            <div class="feature-card" data-aos="zoom-in" data-aos-delay="300" data-aos-duration="800" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15); transition: all 0.3s ease; flex: 1 1 23%; min-width: 250px;">
+                <i class="fas fa-microphone feature-icon" style="color: #feca57;"></i>
+                <h3 style="color: white;">AI Voice Synthesis</h3>
+                <p style="color: rgba(255,255,255,0.8);">Utilizing the most advanced neural network voice synthesis technology, offering over 200 natural and smooth voice styles, supporting more than 50 languages including Chinese, English, Japanese, and Korean. Automatically adjusts speech speed and tone based on video content for emotional dubbing. Supports custom voice parameters including pitch, speed, and volume to meet various video dubbing needs.</p>
+                <div class="feature-overlay" style="background: rgba(255,255,255,0.1);">
+                    <a href="/voice-over" class="feature-link" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #feca57 0%, #ff9f43 100%); color: white; border-radius: 30px; text-decoration: none; font-weight: 500; box-shadow: 0 4px 15px rgba(254,202,87,0.3); transition: all 0.3s ease;">Listen to Demo <i class="fas fa-arrow-right" style="margin-left: 8px;"></i></a>
+                </div>
+            </div>
+
+            <div class="feature-card" data-aos="zoom-in" data-aos-delay="400" data-aos-duration="800" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15); transition: all 0.3s ease; flex: 1 1 23%; min-width: 250px;">
+                <i class="fas fa-closed-captioning feature-icon" style="color: #54a0ff;"></i>
+                <h3 style="color: white;">Smart Subtitle Generation</h3>
+                <p style="color: rgba(255,255,255,0.8);">Based on deep learning speech recognition technology, accurately identifies dialogue content in videos and automatically generates multilingual subtitles. Supports subtitle style customization including font, color, size, and position parameters. Provides intelligent subtitle timeline adjustment to ensure perfect synchronization between subtitles and audio. Supports exporting various subtitle formats including SRT and ASS to meet professional video production needs.</p>
+                <div class="feature-overlay" style="background: rgba(255,255,255,极地0.1);">
+                    <a href="/subtitles" class="feature-link" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #54a0ff 0%, #2e86de 100%); color: white; border-radius: 30px; text-decoration: none; font-weight: 500; box-shadow: 0 4px 15px rgba(84,160,255,0.3); transition: all 0.3s ease;">Generate Subtitles <i class="fas fa-arrow-right" style="margin-left: 8px;"></i></a>
+                </div>
+            </div>
+        <!-- 底部社交图标和用户协议 -->
+        <div class="footer-content" style="margin-top: 60px; text-align: center; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <!-- 社交图标 -->
+            <div class="social-icons" style="margin-bottom: 20px;">
+                <a href="https://twitter.com" target="_blank" style="color: white; margin: 0 15px; font-size: 24px; transition: all 0.3s ease;">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="https://weixin.qq.com" target="_blank" style="color: white; margin: 0 15px; font-size: 24px; transition: all 0.3s ease;">
+                    <i class="fab fa-weixin"></i>
+                </a>
+                <a href="mailto:info@aivideo.com" style="color: white; margin: 0 15px; font-size: 24px; transition: all 0.3s ease;">
+                    <i class="fab fa-google"></i>
+                </a>
+                <a href="https://facebook.com" target="_blank" style="color: white; margin: 0 15px; font-size: 24px; transition: all 0.3s ease;">
+                    <i class="fab fa-facebook"></i>
+                </a>
+            </div>
+            
+            <!-- 用户协议和API按钮 -->
+            <div style="display: flex; justify-content: center; gap: 20px;">
+                <a href="/terms" style="display: inline-block; padding: 8px 20px; background: rgba(255,255,255,0.1); color: white; border-radius: 20px; text-decoration: none; font-size: 14px; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.2);">
+                    用户协议
+                </a>
+                <a href="/api" style="display: inline-block; padding: 8px 20px; background: rgba(255,255,255,0.1); color: white; border-radius: 20px; text-decoration: none; font-size: 14px; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.2);">
+                    API接口
+                </a>
+            </div>
+        </div>
+        </div>

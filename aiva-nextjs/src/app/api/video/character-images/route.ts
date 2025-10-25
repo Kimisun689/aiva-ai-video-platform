@@ -1,0 +1,59 @@
+import { NextRequest, NextResponse } from 'next/server'
+
+export async function POST(request: NextRequest) {
+  try {
+    // 调用后端API生成人物图片
+    const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/video/generate-character-images`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    const data = await backendResponse.json()
+
+    if (!backendResponse.ok) {
+      return NextResponse.json(
+        { success: false, error: data.error || 'Character image generation failed' },
+        { status: backendResponse.status }
+      )
+    }
+
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error('API Error:', error)
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    // 获取最新的人物图片生成结果
+    const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/video/character-images/latest`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    const data = await backendResponse.json()
+
+    if (!backendResponse.ok) {
+      return NextResponse.json(
+        { success: false, error: data.error || 'Failed to fetch character images' },
+        { status: backendResponse.status }
+      )
+    }
+
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error('API Error:', error)
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

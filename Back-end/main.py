@@ -197,6 +197,19 @@ class GeneratedVideo(Base):
     error_message = Column(String)  # 错误信息（如果失败）
     created_at = Column(DateTime, default=datetime.utcnow)  # 创建时间
 
+class AudioFile(Base):
+    """音频文件表 - 存储海螺AI生成的语音文件信息"""
+    __tablename__ = "audio_files"
+    id = Column(Integer, primary_key=True, index=True)
+    text = Column(String, nullable=False)  # 原始文本内容
+    voice_id = Column(String, nullable=False)  # 音色ID（如：male-qn-qingse）
+    filename = Column(String, nullable=False)  # 生成的音频文件名
+    file_path = Column(String, nullable=False)  # 音频文件在服务器上的路径
+    audio_size = Column(Integer, nullable=False)  # 音频文件大小（字节）
+    status = Column(String, nullable=False)  # 生成状态：success/failed
+    error_message = Column(String)  # 错误信息（如果失败）
+    created_at = Column(DateTime, default=datetime.utcnow)  # 创建时间
+
 @app.on_event("startup")
 async def on_startup():
     async with engine.begin() as conn:
@@ -5010,19 +5023,6 @@ async def generate_hailuo_audio(text: str, voice_id: str = "male-qn-qingse") -> 
     except Exception as e:
         print(f"❌ 海螺AI语音合成错误: {e}")
         return {"success": False, "error": str(e)}
-
-class AudioFile(Base):
-    """音频文件表 - 存储海螺AI生成的语音文件信息"""
-    __tablename__ = "audio_files"
-    id = Column(Integer, primary_key=True, index=True)
-    text = Column(String, nullable=False)  # 原始文本内容
-    voice_id = Column(String, nullable=False)  # 音色ID（如：male-qn-qingse）
-    filename = Column(String, nullable=False)  # 生成的音频文件名
-    file_path = Column(String, nullable=False)  # 音频文件在服务器上的路径
-    audio_size = Column(Integer, nullable=False)  # 音频文件大小（字节）
-    status = Column(String, nullable=False)  # 生成状态：success/failed
-    error_message = Column(String)  # 错误信息（如果失败）
-    created_at = Column(DateTime, default=datetime.utcnow)  # 创建时间
 
 class AudioGenerationRequest(BaseModel):
     """音频生成请求模型 - 用于接收语音合成请求"""

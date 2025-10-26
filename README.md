@@ -71,7 +71,7 @@ Note: you need to have (`uv`)[https://github.com/astral-sh/uv] installed
 ```bash
 cd Back-end
 uv sync
-python main.py
+uv run main.py
 ```
 
 The backend API will be available at `http://localhost:8000`

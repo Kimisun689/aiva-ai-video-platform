@@ -66,12 +66,12 @@ The frontend will be available at `http://localhost:3000`
 
 ### Backend Setup
 
+Note: you need to have (`uv`)[https://github.com/astral-sh/uv] installed
+
 ```bash
 cd Back-end
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-python main.py
+uv sync
+uv run main.py
 ```
 
 The backend API will be available at `http://localhost:8000`

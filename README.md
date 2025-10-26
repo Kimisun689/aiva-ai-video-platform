@@ -69,9 +69,9 @@ The frontend will be available at `http://localhost:3000`
 Note: you need to have [`uv`](https://github.com/astral-sh/uv) installed
 
 ```bash
-cd Back-end
-uv sync
-uv run main.py
+cd "Back-end"
+source venv/bin/activate
+uvicorn main:app --reload --port 8000
 ```
 
 The backend API will be available at `http://localhost:8000`

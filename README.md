@@ -66,7 +66,7 @@ The frontend will be available at `http://localhost:3000`
 
 ### Backend Setup
 
-Note: you need to have (`uv`)[https://github.com/astral-sh/uv] installed
+Note: you need to have [`uv`](https://github.com/astral-sh/uv) installed
 
 ```bash
 cd Back-end

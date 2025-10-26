@@ -112,58 +112,6 @@ async def get_deepseek_breakdown(script: str) -> dict:
 
 # ==================== Volcengine Signature Generation ====================
 
-def generate_volc_signature(access_key_id, secret_access_key, http_method, canonical_uri, canonical_querystring, canonical_headers, signed_headers, payload_hash):
-    """
-    生成火山引擎API签名 - 基于AWS4签名算法
-
-    这是火山引擎API认证的核心函数，用于生成请求签名。
-    签名算法基于AWS4标准，确保API调用的安全性。
-
-    Args:
-        access_key_id (str): 访问密钥ID
-        secret_access_key (str): 秘密访问密钥
-        http_method (str): HTTP方法（GET, POST等）
-        canonical_uri (str): 规范化的URI路径
-        canonical_querystring (str): 规范化的查询字符串
-        canonical_headers (str): 规范化的请求头
-        signed_headers (str): 已签名的请求头列表
-        payload_hash (str): 请求体的哈希值
-
-    Returns:
-        tuple: (authorization_header, timestamp)
-            - authorization_header (str): 完整的授权头
-            - timestamp (str): 时间戳
-
-    Note:
-        此函数实现了AWS4签名算法的完整流程：
-        1. 创建规范请求
-        2. 创建待签名字符串
-        3. 计算签名密钥
-        4. 生成最终签名
-    """
-    # 1. 创建规范请求 - 按照AWS4标准格式化请求
-    canonical_request = http_method + '\n' + canonical_uri + '\n' + canonical_querystring + '\n' + canonical_headers + '\n' + signed_headers + '\n' + payload_hash
-
-    # 2. 创建待签名字符串 - 包含算法、时间戳、凭证范围等
-    algorithm = 'HMAC-SHA256'
-    timestamp = str(int(datetime.utcnow().timestamp()))
-    date = datetime.utcnow().strftime('%Y%m%d')
-    credential_scope = date + '/cn-north-1/cv/aws4_request'  # 火山引擎的凭证范围
-
-    string_to_sign = algorithm + '\n' + timestamp + '\n' + credential_scope + '\n' + hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()
-
-    # 3. 计算签名密钥 - 使用HMAC-SHA256算法生成签名密钥
-    k_date = hmac.new(('AWS4' + secret_access_key).encode('utf-8'), date.encode('utf-8'), hashlib.sha256).digest()
-    k_region = hmac.new(k_date, 'cn-north-1'.encode('utf-8'), hashlib.sha256).digest()
-    k_service = hmac.new(k_region, 'cv'.encode('utf-8'), hashlib.sha256).digest()
-    k_signing = hmac.new(k_service, 'aws4_request'.encode('utf-8'), hashlib.sha256).digest()
-    signature = hmac.new(k_signing, string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
-
-    # 4. 创建授权头 - 组合所有签名信息
-    authorization_header = algorithm + ' ' + 'Credential=' + access_key_id + '/' + credential_scope + ', ' + 'SignedHeaders=' + signed_headers + ', ' + 'Signature=' + signature
-
-    return authorization_header, timestamp
-
 # ==================== HaiLuo AI Helper ====================
 
 def extract_hailuo_group_id_from_token(token):
@@ -295,10 +243,10 @@ async def generate_character_image(character_name: str, character_info: dict) ->
             canonical_uri = '/'
             canonical_querystring = 'Action=CVProcess&Version=2022-08-31'
 
-            # 时间戳
+            # 时间戳 - 使用Unix时间戳格式（符合火山引擎要求）
             timestamp = str(int(datetime.utcnow().timestamp()))
-            canonical_headers = f'content-type:application/json\nhost:visual.volcengineapi.com\nx-date:{timestamp}\n'
-            signed_headers = 'content-type;host;x-date'
+            canonical_headers = f'accept:application/json\ncontent-type:application/json\nhost:visual.volcengineapi.com\nuser-agent:AIVA-Video-Platform/1.0\nx-date:{timestamp}\n'
+            signed_headers = 'accept;content-type;host;user-agent;x-date'
 
             # 计算请求体哈希
             payload_hash = hashlib.sha256(json.dumps(data, separators=(',', ':')).encode('utf-8')).hexdigest()
@@ -318,6 +266,8 @@ async def generate_character_image(character_name: str, character_info: dict) ->
             headers = {
                 "Authorization": authorization_header,
                 "Content-Type": "application/json",
+                "Accept": "application/json",
+                "User-Agent": "AIVA-Video-Platform/1.0",
                 "X-Date": timestamp,
                 "Host": "visual.volcengineapi.com"
             }
@@ -371,7 +321,8 @@ async def generate_character_image(character_name: str, character_info: dict) ->
                 try:
                     # 查询任务状态 - 需要重新签名
                     query_timestamp = str(int(datetime.utcnow().timestamp()))
-                    query_canonical_headers = f'content-type:application/json\nhost:visual.volcengineapi.com\nx-date:{query_timestamp}\n'
+                    query_canonical_headers = f'accept:application/json\ncontent-type:application/json\nhost:visual.volcengineapi.com\nuser-agent:AIVA-Video-Platform/1.0\nx-date:{query_timestamp}\n'
+                    query_signed_headers = 'accept;content-type;host;user-agent;x-date'
 
                     query_data = {"task_id": task_id}
                     query_payload_hash = hashlib.sha256(json.dumps(query_data, separators=(',', ':')).encode('utf-8')).hexdigest()
@@ -383,13 +334,16 @@ async def generate_character_image(character_name: str, character_info: dict) ->
                         '/',
                         'Action=GetImgResponse&Version=2022-08-31',
                         query_canonical_headers,
-                        signed_headers,
-                        query_payload_hash
+                        query_signed_headers,
+                        query_payload_hash,
+                        query_timestamp
                     )
 
                     query_headers = {
                         "Authorization": query_authorization,
                         "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "User-Agent": "AIVA-Video-Platform/1.0",
                         "X-Date": query_timestamp,
                         "Host": "visual.volcengineapi.com"
                     }
@@ -628,7 +582,7 @@ async def generate_all_character_images() -> dict:
         print(f"生成所有人物图片错误: {e}")
         return {"success": False, "error": str(e)}
 
-def generate_volc_signature(access_key_id, secret_access_key, http_method, canonical_uri, canonical_querystring, canonical_headers, signed_headers, payload_hash):
+def generate_volc_signature(access_key_id, secret_access_key, http_method, canonical_uri, canonical_querystring, canonical_headers, signed_headers, payload_hash, timestamp):
     """
     生成火山引擎API签名 - 基于AWS4签名算法
 
@@ -641,6 +595,7 @@ def generate_volc_signature(access_key_id, secret_access_key, http_method, canon
         canonical_headers (str): 规范化的请求头
         signed_headers (str): 已签名的请求头列表
         payload_hash (str): 请求体的哈希值
+        timestamp (str): Unix时间戳字符串
 
     Returns:
         str: 完整的授权头
@@ -651,9 +606,10 @@ def generate_volc_signature(access_key_id, secret_access_key, http_method, canon
     canonical_request = http_method + '\n' + canonical_uri + '\n' + canonical_querystring + '\n' + canonical_headers + '\n' + signed_headers + '\n' + payload_hash
 
     # 2. 创建待签名字符串 - 包含算法、时间戳、凭证范围等
-    algorithm = 'HMAC-SHA256'
-    timestamp = str(int(datetime.utcnow().timestamp()))
-    date = datetime.utcnow().strftime('%Y%m%d')
+    algorithm = 'AWS4-HMAC-SHA256'
+    # timestamp is passed in as Unix timestamp string, convert to datetime for date extraction
+    timestamp_int = int(timestamp)
+    date = datetime.utcfromtimestamp(timestamp_int).strftime('%Y%m%d')  # Extract YYYYMMDD for credential scope
     credential_scope = date + '/cn-north-1/cv/aws4_request'  # 火山引擎的凭证范围
 
     string_to_sign = algorithm + '\n' + timestamp + '\n' + credential_scope + '\n' + hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()
